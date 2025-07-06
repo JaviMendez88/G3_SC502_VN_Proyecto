@@ -1,0 +1,81 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Iniciar sesión – FideFinance</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+<script defer src="js/login.js"></script>
+
+<style>
+body { background: linear-gradient(135deg, #8eb8eb, #eff173); }
+.login-box{
+  max-width:400px; margin:auto; background:#fff; padding:2rem;
+ border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,.05);
+}
+.form-control:focus{
+ box-shadow:0 0 0 .2rem rgba(25,135,84,.25); border-color:#198754;
+}
+.social-icons i{ font-size:1.8rem; margin:0 1rem; cursor:pointer; }
+.btn-success{ background:#028858; }
+  </style>
+</head>
+
+<body class="d-flex justify-content-center align-items-center vh-100">
+
+<!-- LOGO  -->
+<div class="login-box">
+<div class="text-center mb-3">
+<img src="img/fidefinanceimagen.png" alt="Logo FideFinance" style="max-width: 180px; height: auto;">
+</div>
+
+
+  <!-- CAJA DE LOGIN -->
+  <div class="login-box">
+    <h4 class="mb-4 text-center fw-bold">Iniciar sesión</h4>
+
+    <form id="loginForm">
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="email"
+               placeholder="ejemplo@ufide.ac.cr" required>
+      </div>
+
+      <div class="mb-2">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group">
+          <input type="password" class="form-control" id="password"
+                 placeholder="Tu contraseña" required>
+          <span class="input-group-text"><i class="bi bi-eye-slash"></i></span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <a href="#" class="text-success text-decoration-none small">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <button type="submit" class="btn btn-success w-100 mb-3">Ingresar</button>
+      <div id="error"
+           class="text-danger text-center d-none">
+        Correo o contraseña incorrectos
+      </div>
+    </form>
+
+    <div class="text-center">
+      <small>¿No tienes cuenta?
+        <a href="registro.html" class="text-success text-decoration-none">
+          Regístrate
+        </a>
+      </small>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
