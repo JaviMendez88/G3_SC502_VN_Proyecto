@@ -57,3 +57,34 @@ body {
   background-color: #019875;
   border-color: #019875;
 }
+
+
+/* Estilos about us */
+.about-us-section {
+  position: relative;
+  height: 60vh;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.overlay-text {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 2rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  text-shadow: 1px 1px 3px black;
+}

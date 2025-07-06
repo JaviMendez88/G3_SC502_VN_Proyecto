@@ -21,6 +21,7 @@
                     <li class="nav-item"><a class="nav-link text-white" href="#">Soporte</a></li>
                 </ul>
             </aside>
+
             <!-- Fin Sidebar al lado izquierdo -->
             <main class="col-md-10 p-4">
                 <div class="d-flex justify-content-end align-items-center mb-3 gap-2">
@@ -28,6 +29,18 @@
                     <a href="user_register.html" class="btn custom-btn">Registrarse</a>
                     <button class="btn custom-btn" data-bs-toggle="modal" data-bs-target="#modalContacto">Contacto</button>
                 </div>
+
+            <!-- Fin Manejo de section (cambiar a div) Acerca de Nosotros con video -->
+        <section id="acerca" class="about-us-section position-relative mb-5">
+            <video autoplay muted loop playsinline class="background-video">
+              <source src="videos/moneyzoomout.mp4" type="video/mp4">
+            </video>
+            <div class="overlay-text text-white text-center d-flex flex-column justify-content-center align-items-center">
+                <h2 class="display-5 fw-bold">Acerca de Nosotros</h2>
+                <p class="w-75 fs-5">FideFinance, la solución para el éxito financiero personal.</p>
+            </div>
+        </section>
+            <!-- Fin Manejo de section (cambiar a div) Acerca de Nosotros con video -->
             
                 <!-- Modal de Contacto para botón (contacto) -->
                 <div class="modal fade" id="modalContacto" tabindex="-1" aria-labelledby="modalContactoLabel" aria-hidden="true">
