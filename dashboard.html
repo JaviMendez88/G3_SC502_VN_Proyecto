@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel – FideFinance</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilo.css">
+
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #7ba9e4, #f5e96d);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+
+<main class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="card p-4 shadow" style="max-width: 750px; width: 100%;">
+    
+    <div class="text-center mb-3">
+      <img src="img/fidefinanceimagen.png" alt="FideFinance logo" style="height: 100px;">
+    </div>
+
+    <h2 class="mb-4 text-center">Resumen Financiero</h2>
+
+    <!-- Tarjeta de balance -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Balance actual</h5>
+        <p id="balance" class="display-6 fw-semibold text-success">₡ 0,00</p>
+      </div>
+    </div>
+
+    <!-- Botón + Modal para añadir movimiento -->
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalMov">+ Agregar movimiento</button>
+
+    <!-- Tabla -->
+    <div class="table-responsive">
+      <table class="table table-striped" id="tablaMov">
+        <thead class="table-dark">
+          <tr>
+            <th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Monto</th><th>Descripción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal fade" id="modalMov">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formMov">
+        <div class="modal-header"><h5 class="modal-title">Nuevo movimiento</h5></div>
+        <div class="modal-body">
+          <input type="date" id="fecha" class="form-control mb-2" required>
+          <select id="tipo" class="form-select mb-2" required>
+            <option value="">Tipo</option>
+            <option value="Ingreso">Ingreso</option>
+            <option value="Gasto">Gasto</option>
+          </select>
+          <input type="text" id="cat" class="form-control mb-2" placeholder="Categoría" required>
+          <input type="number" id="monto" class="form-control mb-2" placeholder="Monto" step="0.01" required>
+          <textarea id="desc" class="form-control" placeholder="Descripción (opcional)"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/movimientos.js"></script>
+</body>
+</html>
