@@ -1,0 +1,59 @@
+/* Estilos del login */
+
+body {
+  background: linear-gradient(180deg, #38b6ff, #00d09c);
+  min-height: 100vh;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 208, 156, 0.25);
+}
+
+.logo {
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 2rem;
+}
+
+/* Estilos del home */
+.sidebar {
+  background-color: #212529;
+  min-height: 100vh;
+  color: white;
+}
+
+.sidebar .nav-link {
+  color: white;
+}
+
+.sidebar .nav-link.active {
+  background-color: #0d6efd;
+}
+
+/* Estilos botones customizados */
+.custom-btn{
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+}
+
+.custom-btn:hover{
+  background-color: #019875;
+}
+
+.btn-primary {
+  background-color: #00b894;
+  border-color: #00b894;
+}
+
+.btn-primary:hover {
+  background-color: #019875;
+  border-color: #019875;
+}
