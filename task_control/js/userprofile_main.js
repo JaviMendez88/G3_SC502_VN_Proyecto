@@ -193,7 +193,7 @@ case 'plan':
             <td>Gasto</td>
             <td>Alquiler</td>
             <td>₡ 400,000.00</td>
-            <td>Renta mensual</td>
+            <td>Alquiler mensual</td>
           </tr>
           <tr>
             <td>2025-06-12</td>
@@ -214,14 +214,14 @@ case 'plan':
             <td>Gasto</td>
             <td>Servicios</td>
             <td>₡ 90,000.00</td>
-            <td>Electricidad, agua</td>
+            <td>Electricidad</td>
           </tr>
           <tr>
             <td>2025-06-28</td>
             <td>Gasto</td>
             <td>Ocio</td>
             <td>₡ 200,000.00</td>
-            <td>Cine, restaurantes</td>
+            <td>Cine</td>
           </tr>
         </tbody>
       </table>
