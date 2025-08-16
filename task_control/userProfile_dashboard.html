@@ -1,11 +1,637 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FideFinance - Dashboard Financiero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+<div class="container-fluid">
+    <div class="row min-vh-100">
+        <!-- Sidebar -->
+        <aside class="col-md-2 bg-dark text-white p-4 sidebar">
+            <img src="images/FideFinance_Logo.png" alt="FideFinanceLogo" class="logo mb-3">
+            <h5 class="mb-4">Mi Cuenta</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_main.html">
+                        <i class="fas fa-home me-2"></i>Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white active" href="userProfile_dashboard.html">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Financiero
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_financeactivity.html">
+                        <i class="fas fa-list-alt me-2"></i>Actividad Financiera
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_PlanandForecast.html">
+                        <i class="fas fa-chart-line me-2"></i>Plan y Presupuesto
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-5">
+                <a href="#" onclick="cerrarSesion()" class="btn btn-danger w-100">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="col-md-10 p-4">
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center mb-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando dashboard financiero...</p>
+            </div>
+
+            <!-- Header Section -->
+            <div id="headerSection" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-0">Dashboard Financiero</h2>
+                        <p class="text-muted mb-0">Resumen completo de tu situación financiera</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle text-muted me-2" style="font-size: 2rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Bienvenido,</small>
+                            <span id="userName" class="fw-bold">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-bg-success h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">💰 Ingresos Totales</h6>
+                                        <h4 id="totalIngresos">₡ 0</h4>
+                                    </div>
+                                    <i class="fas fa-arrow-up fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-danger h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">💸 Gastos Totales</h6>
+                                        <h4 id="totalGastos">₡ 0</h4>
+                                    </div>
+                                    <i class="fas fa-arrow-down fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">📊 Balance Total</h6>
+                                        <h4 id="balanceTotal">₡ 0</h4>
+                                    </div>
+                                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">📈 Tasa de Ahorro</h6>
+                                        <h4 id="tasaAhorro">0%</h4>
+                                    </div>
+                                    <i class="fas fa-piggy-bank fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>Tendencia Mensual
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="monthlyChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>Gastos por Categoría
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="categoriesChart" width="300" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity and Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>Movimientos Recientes
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="recentMovementsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Tipo</th>
+                                                <th>Categoría</th>
+                                                <th>Monto</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="5" class="text-center">
+                                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                                    Cargando movimientos...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Current Month Summary -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-calendar-month me-2"></i>Resumen del Mes
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Total Movimientos:</strong><br>
+                                    <span id="currentMonthMovements" class="text-primary">0</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Ingresos del Mes:</strong><br>
+                                    <span id="currentMonthIncome" class="text-success">₡ 0</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Gastos del Mes:</strong><br>
+                                    <span id="currentMonthExpenses" class="text-danger">₡ 0</span>
+                                </div>
+                                <div class="mb-0">
+                                    <strong>Promedio Diario:</strong><br>
+                                    <span id="dailyAverage" class="text-muted">₡ 0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Categories -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-star me-2"></i>Top Categorías
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="topCategoriesList">
+                                    <div class="text-center">
+                                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                                        <p class="small mt-2">Cargando...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <a href="userProfile_financeactivity.html" class="btn btn-outline-primary w-100 mb-2">
+                                            <i class="fas fa-plus me-2"></i>Nuevo Movimiento
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="userProfile_PlanandForecast.html" class="btn btn-outline-success w-100 mb-2">
+                                            <i class="fas fa-chart-line me-2"></i>Ver Plan Financiero
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-info w-100 mb-2" onclick="exportData()">
+                                            <i class="fas fa-download me-2"></i>Exportar Datos
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-warning w-100 mb-2" onclick="refreshDashboard()">
+                                            <i class="fas fa-sync me-2"></i>Actualizar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Message container for notifications -->
+<div id="message-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;"></div>
+
+<!-- Scripts -->
+<script src="js/api.js"></script>
+<script>
+// Variables globales
+let dashboardData = null;
+let monthlyChart = null;
+let categoriesChart = null;
+
+// Verificar autenticación y cargar dashboard
+document.addEventListener('DOMContentLoaded', async function() {
+    if (!api.isAuthenticated()) {
+        window.location.href = 'user_logIn.html';
+        return;
+    }
+
+    await loadDashboard();
+});
+
+// Cargar datos del dashboard
+async function loadDashboard() {
+    try {
+        showLoading(true);
+        
+        // Cargar datos del dashboard
+        const response = await api.getDashboard();
+        dashboardData = response.data;
+        
+        // Actualizar UI
+        updateUserHeader(dashboardData.user);
+        updateQuickStats(dashboardData.balance);
+        updateCurrentMonthSummary(dashboardData.current_month_summary);
+        updateRecentMovements(dashboardData.recent_movements);
+        updateTopCategories(dashboardData.top_categories);
+        
+        // Crear gráficos
+        createMonthlyChart(dashboardData.monthly_stats);
+        createCategoriesChart(dashboardData.categories_stats);
+        
+        showLoading(false);
+        
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+        api.showMessage('Error al cargar el dashboard: ' + error.message, 'error');
+        showLoading(false);
+    }
+}
+
+// Mostrar/ocultar loading
+function showLoading(show) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const headerSection = document.getElementById('headerSection');
     
+    if (show) {
+        loadingIndicator.style.display = 'block';
+        headerSection.style.display = 'none';
+    } else {
+        loadingIndicator.style.display = 'none';
+        headerSection.style.display = 'block';
+    }
+}
+
+// Actualizar header del usuario
+function updateUserHeader(user) {
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement && user) {
+        userNameElement.textContent = `${user.nombre} ${user.apellidos}`;
+    }
+}
+
+// Actualizar estadísticas rápidas
+function updateQuickStats(balance) {
+    if (!balance) return;
+    
+    const elements = {
+        totalIngresos: document.getElementById('totalIngresos'),
+        totalGastos: document.getElementById('totalGastos'),
+        balanceTotal: document.getElementById('balanceTotal'),
+        tasaAhorro: document.getElementById('tasaAhorro')
+    };
+    
+    if (elements.totalIngresos) {
+        elements.totalIngresos.textContent = api.formatCurrency(balance.total_ingresos);
+    }
+    
+    if (elements.totalGastos) {
+        elements.totalGastos.textContent = api.formatCurrency(balance.total_gastos);
+    }
+    
+    if (elements.balanceTotal) {
+        elements.balanceTotal.textContent = api.formatCurrency(balance.balance_total);
+        
+        // Cambiar color de la card según el balance
+        const card = elements.balanceTotal.closest('.card');
+        if (card) {
+            card.className = balance.balance_total >= 0 ? 'card text-bg-primary h-100' : 'card text-bg-danger h-100';
+        }
+    }
+    
+    if (elements.tasaAhorro) {
+        elements.tasaAhorro.textContent = `${balance.savings_rate}%`;
+    }
+}
+
+// Actualizar resumen del mes actual
+function updateCurrentMonthSummary(summary) {
+    if (!summary) return;
+    
+    const elements = {
+        currentMonthMovements: document.getElementById('currentMonthMovements'),
+        currentMonthIncome: document.getElementById('currentMonthIncome'),
+        currentMonthExpenses: document.getElementById('currentMonthExpenses'),
+        dailyAverage: document.getElementById('dailyAverage')
+    };
+    
+    if (elements.currentMonthMovements) {
+        elements.currentMonthMovements.textContent = summary.total_movements;
+    }
+    
+    if (elements.currentMonthIncome) {
+        elements.currentMonthIncome.textContent = api.formatCurrency(summary.recent_income);
+    }
+    
+    if (elements.currentMonthExpenses) {
+        elements.currentMonthExpenses.textContent = api.formatCurrency(summary.recent_expenses);
+    }
+    
+    if (elements.dailyAverage) {
+        elements.dailyAverage.textContent = api.formatCurrency(summary.daily_average);
+    }
+}
+
+// Actualizar movimientos recientes
+function updateRecentMovements(movements) {
+    const tbody = document.querySelector('#recentMovementsTable tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (!movements || movements.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                    No hay movimientos recientes
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    movements.forEach(mov => {
+        const fecha = new Date(mov.fecha).toLocaleDateString('es-CR');
+        const tipoClass = mov.tipo === 'ingreso' ? 'text-success' : 'text-danger';
+        const tipoIcon = mov.tipo === 'ingreso' ? '💰' : '💸';
+        
+        tbody.innerHTML += `
+            <tr>
+                <td>${fecha}</td>
+                <td class="${tipoClass}">
+                    ${tipoIcon} ${mov.tipo.charAt(0).toUpperCase() + mov.tipo.slice(1)}
+                </td>
+                <td>${mov.categoria}</td>
+                <td class="${tipoClass}">${api.formatCurrency(mov.monto)}</td>
+                <td>${mov.descripcion || '-'}</td>
+            </tr>
+        `;
+    });
+}
+
+// Actualizar top categorías
+function updateTopCategories(categories) {
+    const container = document.getElementById('topCategoriesList');
+    if (!container) return;
+    
+    if (!categories || categories.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                <p class="small">No hay datos disponibles</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    categories.forEach((cat, index) => {
+        const progressValue = Math.round((cat.count / categories[0].count) * 100);
+        
+        container.innerHTML += `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small class="fw-bold">${cat.categoria}</small>
+                    <small class="text-muted">${cat.count} usos</small>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" style="width: ${progressValue}%"></div>
+                </div>
+                <small class="text-muted">${api.formatCurrency(cat.total)}</small>
+            </div>
+        `;
+    });
+}
+
+// Crear gráfico mensual
+function createMonthlyChart(monthlyStats) {
+    const ctx = document.getElementById('monthlyChart');
+    if (!ctx || !monthlyStats) return;
+    
+    const labels = monthlyStats.map(m => m.mes_nombre);
+    const ingresos = monthlyStats.map(m => m.ingresos);
+    const gastos = monthlyStats.map(m => m.gastos);
+    const balance = monthlyStats.map(m => m.balance);
+    
+    if (monthlyChart) {
+        monthlyChart.destroy();
+    }
+    
+    monthlyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ingresos',
+                data: ingresos,
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                tension: 0.3
+            }, {
+                label: 'Gastos',
+                data: gastos,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.3
+            }, {
+                label: 'Balance',
+                data: balance,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₡ ' + value.toLocaleString('es-CR');
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ₡ ' + context.raw.toLocaleString('es-CR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Crear gráfico de categorías
+function createCategoriesChart(categoriesStats) {
+    const ctx = document.getElementById('categoriesChart');
+    if (!ctx || !categoriesStats) return;
+    
+    const gastos = categoriesStats.filter(cat => cat.tipo === 'gasto');
+    if (gastos.length === 0) {
+        ctx.parentElement.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                <p>No hay datos de gastos disponibles</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const labels = gastos.map(cat => cat.categoria);
+    const data = gastos.map(cat => cat.total);
+    const colors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+    ];
+    
+    if (categoriesChart) {
+        categoriesChart.destroy();
+    }
+    
+    categoriesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return context.label + ': ₡ ' + context.raw.toLocaleString('es-CR') + ` (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Función para actualizar dashboard
+async function refreshDashboard() {
+    api.showMessage('Actualizando dashboard...', 'info', 2000);
+    await loadDashboard();
+    api.showMessage('Dashboard actualizado exitosamente', 'success');
+}
+
+// Función para exportar datos (placeholder)
+function exportData() {
+    api.showMessage('Funcionalidad de exportación en desarrollo', 'warning');
+}
+
+// Función global para cerrar sesión
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        api.logout();
+    }
+}
+</script>
+
 </body>
 </html>

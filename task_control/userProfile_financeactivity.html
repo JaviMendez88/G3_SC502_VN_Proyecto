@@ -1,11 +1,660 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FideFinance - Actividad Financiera</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
+
+<div class="container-fluid">
+    <div class="row min-vh-100">
+        <!-- Sidebar -->
+        <aside class="col-md-2 bg-dark text-white p-4 sidebar">
+            <img src="images/FideFinance_Logo.png" alt="FideFinanceLogo" class="logo mb-3">
+            <h5 class="mb-4">Mi Cuenta</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_main.html">
+                        <i class="fas fa-home me-2"></i>Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_dashboard.html">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Financiero
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white active" href="userProfile_financeactivity.html">
+                        <i class="fas fa-list-alt me-2"></i>Actividad Financiera
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="userProfile_PlanandForecast.html">
+                        <i class="fas fa-chart-line me-2"></i>Plan y Presupuesto
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-5">
+                <a href="#" onclick="cerrarSesion()" class="btn btn-danger w-100">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="col-md-10 p-4">
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center mb-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando actividad financiera...</p>
+            </div>
+
+            <!-- Header Section -->
+            <div id="headerSection" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-0">Actividad Financiera</h2>
+                        <p class="text-muted mb-0">Gestiona todos tus movimientos financieros</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle text-muted me-2" style="font-size: 2rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Usuario:</small>
+                            <span id="userName" class="fw-bold">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-bg-success h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-arrow-up fa-3x mb-2 opacity-75"></i>
+                                <h6 class="card-title">Total Ingresos</h6>
+                                <h4 id="totalIngresos">₡ 0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-danger h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-arrow-down fa-3x mb-2 opacity-75"></i>
+                                <h6 class="card-title">Total Gastos</h6>
+                                <h4 id="totalGastos">₡ 0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-primary h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-balance-scale fa-3x mb-2 opacity-75"></i>
+                                <h6 class="card-title">Balance</h6>
+                                <h4 id="balance">₡ 0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-bg-info h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-list fa-3x mb-2 opacity-75"></i>
+                                <h6 class="card-title">Total Movimientos</h6>
+                                <h4 id="totalMovimientos">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoMovimiento">
+                                <i class="fas fa-plus me-2"></i>Nuevo Movimiento
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="refreshMovements()">
+                                <i class="fas fa-sync me-2"></i>Actualizar
+                            </button>
+                            <button class="btn btn-outline-info" onclick="exportMovements()">
+                                <i class="fas fa-download me-2"></i>Exportar
+                            </button>
+                            <div class="ms-auto d-flex gap-2">
+                                <select id="filterType" class="form-select" style="width: auto;" onchange="filterMovements()">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="ingreso">Solo Ingresos</option>
+                                    <option value="gasto">Solo Gastos</option>
+                                </select>
+                                <select id="filterCategory" class="form-select" style="width: auto;" onchange="filterMovements()">
+                                    <option value="">Todas las categorías</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movements Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list-alt me-2"></i>Historial de Movimientos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="movementsTable">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Tipo</th>
+                                                <th>Categoría</th>
+                                                <th>Monto</th>
+                                                <th>Descripción</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="6" class="text-center">
+                                                    <div class="spinner-border" role="status"></div>
+                                                    <p class="mt-2">Cargando movimientos...</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div>
+                                        <span id="movementsInfo" class="text-muted">Mostrando 0 de 0 movimientos</span>
+                                    </div>
+                                    <div>
+                                        <button id="btnPrevious" class="btn btn-outline-primary btn-sm me-2" onclick="previousPage()" disabled>
+                                            <i class="fas fa-chevron-left me-1"></i>Anterior
+                                        </button>
+                                        <span id="pageInfo" class="text-muted mx-2">Página 1 de 1</span>
+                                        <button id="btnNext" class="btn btn-outline-primary btn-sm ms-2" onclick="nextPage()" disabled>
+                                            Siguiente<i class="fas fa-chevron-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal para Nuevo Movimiento -->
+<div class="modal fade" id="modalNuevoMovimiento" tabindex="-1" aria-labelledby="modalNuevoMovimientoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formNuevoMovimiento">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalNuevoMovimientoLabel">
+                        <i class="fas fa-plus me-2"></i>Nuevo Movimiento Financiero
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fechaMovimiento" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Fecha *
+                                </label>
+                                <input type="date" class="form-control" id="fechaMovimiento" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipoMovimiento" class="form-label">
+                                    <i class="fas fa-exchange-alt me-1"></i>Tipo *
+                                </label>
+                                <select class="form-select" id="tipoMovimiento" required onchange="updateCategoriesModal()">
+                                    <option value="">Seleccionar tipo</option>
+                                    <option value="ingreso">💰 Ingreso</option>
+                                    <option value="gasto">💸 Gasto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categoriaMovimiento" class="form-label">
+                                    <i class="fas fa-tags me-1"></i>Categoría *
+                                </label>
+                                <select class="form-select" id="categoriaMovimiento" required>
+                                    <option value="">Seleccionar categoría</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="montoMovimiento" class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i>Monto (₡) *
+                                </label>
+                                <input type="number" class="form-control" id="montoMovimiento" 
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcionMovimiento" class="form-label">
+                            <i class="fas fa-comment me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcionMovimiento" rows="3" 
+                                  placeholder="Descripción opcional del movimiento"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Agrega una descripción detallada para llevar un mejor control de tus finanzas.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Guardar Movimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Message container for notifications -->
+<div id="message-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;"></div>
+
+<!-- Scripts -->
+<script src="js/api.js"></script>
+<script>
+// Variables globales
+let allMovements = [];
+let filteredMovements = [];
+let userCategories = [];
+let currentPage = 1;
+const movementsPerPage = 10;
+let currentUser = null;
+
+// Verificar autenticación y cargar datos
+document.addEventListener('DOMContentLoaded', async function() {
+    if (!api.isAuthenticated()) {
+        window.location.href = 'user_logIn.html';
+        return;
+    }
+
+    await loadFinanceActivity();
+});
+
+// Cargar actividad financiera
+async function loadFinanceActivity() {
+    try {
+        showLoading(true);
+        
+        // Cargar usuario actual
+        currentUser = api.getCurrentUser();
+        
+        // Cargar movimientos
+        const movementsResponse = await api.getMovements(1000, 0); // Cargar muchos para filtrado local
+        allMovements = movementsResponse.data || [];
+        filteredMovements = [...allMovements];
+        
+        // Cargar categorías
+        const categoriesResponse = await api.getCategories();
+        userCategories = categoriesResponse.data.all || [];
+        
+        // Actualizar UI
+        updateUserHeader();
+        updateSummaryCards();
+        updateCategoryFilters();
+        updateMovementsTable();
+        setupForm();
+        
+        showLoading(false);
+        
+    } catch (error) {
+        console.error('Error cargando actividad financiera:', error);
+        api.showMessage('Error al cargar los datos: ' + error.message, 'error');
+        showLoading(false);
+    }
+}
+
+// Mostrar/ocultar loading
+function showLoading(show) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const headerSection = document.getElementById('headerSection');
     
+    if (show) {
+        loadingIndicator.style.display = 'block';
+        headerSection.style.display = 'none';
+    } else {
+        loadingIndicator.style.display = 'none';
+        headerSection.style.display = 'block';
+    }
+}
+
+// Actualizar header del usuario
+function updateUserHeader() {
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement && currentUser) {
+        userNameElement.textContent = `${currentUser.nombre} ${currentUser.apellidos}`;
+    }
+}
+
+// Actualizar tarjetas de resumen
+function updateSummaryCards() {
+    const ingresos = allMovements.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + parseFloat(m.monto), 0);
+    const gastos = allMovements.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + parseFloat(m.monto), 0);
+    const balance = ingresos - gastos;
+    
+    const elements = {
+        totalIngresos: document.getElementById('totalIngresos'),
+        totalGastos: document.getElementById('totalGastos'),
+        balance: document.getElementById('balance'),
+        totalMovimientos: document.getElementById('totalMovimientos')
+    };
+    
+    if (elements.totalIngresos) {
+        elements.totalIngresos.textContent = api.formatCurrency(ingresos);
+    }
+    
+    if (elements.totalGastos) {
+        elements.totalGastos.textContent = api.formatCurrency(gastos);
+    }
+    
+    if (elements.balance) {
+        elements.balance.textContent = api.formatCurrency(balance);
+        
+        // Cambiar color de la card según el balance
+        const card = elements.balance.closest('.card');
+        if (card) {
+            card.className = balance >= 0 ? 'card text-bg-primary h-100' : 'card text-bg-danger h-100';
+        }
+    }
+    
+    if (elements.totalMovimientos) {
+        elements.totalMovimientos.textContent = allMovements.length;
+    }
+}
+
+// Actualizar filtros de categorías
+function updateCategoryFilters() {
+    const filterCategory = document.getElementById('filterCategory');
+    if (!filterCategory) return;
+    
+    // Limpiar opciones existentes (excepto la primera)
+    filterCategory.innerHTML = '<option value="">Todas las categorías</option>';
+    
+    // Obtener categorías únicas de los movimientos
+    const uniqueCategories = [...new Set(allMovements.map(m => m.categoria))];
+    
+    uniqueCategories.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria;
+        option.textContent = categoria;
+        filterCategory.appendChild(option);
+    });
+}
+
+// Filtrar movimientos
+function filterMovements() {
+    const typeFilter = document.getElementById('filterType').value;
+    const categoryFilter = document.getElementById('filterCategory').value;
+    
+    filteredMovements = allMovements.filter(movement => {
+        const typeMatch = !typeFilter || movement.tipo === typeFilter;
+        const categoryMatch = !categoryFilter || movement.categoria === categoryFilter;
+        return typeMatch && categoryMatch;
+    });
+    
+    currentPage = 1;
+    updateMovementsTable();
+}
+
+// Actualizar tabla de movimientos
+function updateMovementsTable() {
+    const tbody = document.querySelector('#movementsTable tbody');
+    if (!tbody) return;
+    
+    const startIndex = (currentPage - 1) * movementsPerPage;
+    const endIndex = startIndex + movementsPerPage;
+    const paginatedMovements = filteredMovements.slice(startIndex, endIndex);
+    
+    tbody.innerHTML = '';
+    
+    if (paginatedMovements.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                    <p class="mb-0">No hay movimientos que coincidan con los filtros seleccionados</p>
+                    <small class="text-muted">Intenta cambiar los filtros o agregar nuevos movimientos</small>
+                </td>
+            </tr>
+        `;
+        updatePaginationInfo();
+        return;
+    }
+    
+    // Ordenar por fecha (más recientes primero)
+    const sortedMovements = paginatedMovements.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    sortedMovements.forEach(mov => {
+        const fecha = new Date(mov.fecha).toLocaleDateString('es-CR');
+        const tipoClass = mov.tipo === 'ingreso' ? 'text-success' : 'text-danger';
+        const tipoIcon = mov.tipo === 'ingreso' ? '💰' : '💸';
+        
+        tbody.innerHTML += `
+            <tr>
+                <td>${fecha}</td>
+                <td class="${tipoClass}">
+                    ${tipoIcon} ${mov.tipo.charAt(0).toUpperCase() + mov.tipo.slice(1)}
+                </td>
+                <td>
+                    <span class="badge bg-secondary">${mov.categoria}</span>
+                </td>
+                <td class="${tipoClass} fw-bold">
+                    ${api.formatCurrency(mov.monto)}
+                </td>
+                <td>
+                    <span class="text-truncate d-inline-block" style="max-width: 200px;" title="${mov.descripcion || 'Sin descripción'}">
+                        ${mov.descripcion || '-'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMovement(${mov.id})" title="Eliminar movimiento">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    updatePaginationInfo();
+}
+
+// Actualizar información de paginación
+function updatePaginationInfo() {
+    const totalMovements = filteredMovements.length;
+    const totalPages = Math.ceil(totalMovements / movementsPerPage);
+    const startIndex = (currentPage - 1) * movementsPerPage + 1;
+    const endIndex = Math.min(currentPage * movementsPerPage, totalMovements);
+    
+    // Actualizar información de movimientos
+    const movementsInfo = document.getElementById('movementsInfo');
+    if (movementsInfo) {
+        if (totalMovements === 0) {
+            movementsInfo.textContent = 'No hay movimientos para mostrar';
+        } else {
+            movementsInfo.textContent = `Mostrando ${startIndex} a ${endIndex} de ${totalMovements} movimientos`;
+        }
+    }
+    
+    // Actualizar información de página
+    const pageInfo = document.getElementById('pageInfo');
+    if (pageInfo) {
+        pageInfo.textContent = `Página ${currentPage} de ${Math.max(1, totalPages)}`;
+    }
+    
+    // Actualizar botones de navegación
+    const btnPrevious = document.getElementById('btnPrevious');
+    const btnNext = document.getElementById('btnNext');
+    
+    if (btnPrevious) {
+        btnPrevious.disabled = currentPage <= 1;
+    }
+    
+    if (btnNext) {
+        btnNext.disabled = currentPage >= totalPages;
+    }
+}
+
+// Navegación de páginas
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        updateMovementsTable();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(filteredMovements.length / movementsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        updateMovementsTable();
+    }
+}
+
+// Configurar formulario
+function setupForm() {
+    // Establecer fecha actual por defecto
+    const fechaInput = document.getElementById('fechaMovimiento');
+    if (fechaInput) {
+        fechaInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Configurar envío del formulario
+    const form = document.getElementById('formNuevoMovimiento');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmit);
+    }
+}
+
+// Actualizar categorías en el modal según el tipo seleccionado
+function updateCategoriesModal() {
+    const tipo = document.getElementById('tipoMovimiento').value;
+    const categoriaSelect = document.getElementById('categoriaMovimiento');
+    
+    if (!categoriaSelect) return;
+    
+    categoriaSelect.innerHTML = '<option value="">Seleccionar categoría</option>';
+    
+    if (tipo && userCategories) {
+        const categoriasFiltradas = userCategories.filter(cat => cat.tipo === tipo);
+        categoriasFiltradas.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria.nombre;
+            option.textContent = `${categoria.icon || ''} ${categoria.nombre}`;
+            categoriaSelect.appendChild(option);
+        });
+    }
+}
+
+// Manejar envío del formulario
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    try {
+        const movementData = {
+            fecha: document.getElementById('fechaMovimiento').value,
+            tipo: document.getElementById('tipoMovimiento').value,
+            categoria: document.getElementById('categoriaMovimiento').value,
+            monto: parseFloat(document.getElementById('montoMovimiento').value),
+            descripcion: document.getElementById('descripcionMovimiento').value || ''
+        };
+        
+        // Validaciones
+        if (!movementData.fecha || !movementData.tipo || !movementData.categoria || !movementData.monto) {
+            api.showMessage('Por favor completa todos los campos obligatorios', 'error');
+            return;
+        }
+        
+        if (movementData.monto <= 0) {
+            api.showMessage('El monto debe ser mayor a 0', 'error');
+            return;
+        }
+        
+        // Enviar al backend
+        await api.createMovement(movementData);
+        
+        // Recargar datos
+        await loadFinanceActivity();
+        
+        // Cerrar modal y limpiar formulario
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoMovimiento'));
+        if (modal) modal.hide();
+        
+        document.getElementById('formNuevoMovimiento').reset();
+        document.getElementById('fechaMovimiento').value = new Date().toISOString().split('T')[0];
+        
+        api.showMessage('Movimiento registrado exitosamente', 'success');
+        
+    } catch (error) {
+        api.showMessage('Error al guardar movimiento: ' + error.message, 'error');
+    }
+}
+
+// Eliminar movimiento
+async function deleteMovement(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este movimiento? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        await api.deleteMovement(id);
+        await loadFinanceActivity();
+        api.showMessage('Movimiento eliminado exitosamente', 'success');
+    } catch (error) {
+        api.showMessage('Error al eliminar movimiento: ' + error.message, 'error');
+    }
+}
+
+// Actualizar movimientos
+async function refreshMovements() {
+    api.showMessage('Actualizando movimientos...', 'info', 2000);
+    await loadFinanceActivity();
+    api.showMessage('Movimientos actualizados exitosamente', 'success');
+}
+
+// Exportar movimientos (placeholder)
+function exportMovements() {
+    api.showMessage('Funcionalidad de exportación en desarrollo', 'warning');
+}
+
+// Función global para cerrar sesión
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        api.logout();
+    }
+}
+</script>
+
 </body>
 </html>

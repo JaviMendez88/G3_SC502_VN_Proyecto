@@ -1,239 +1,202 @@
 <?php
-require_once '../config/database.php';
-require_once '../models/Movement.php';
-require_once '../utils/Auth.php';
-require_once '../utils/Validator.php';
-require_once '../utils/Logger.php';
-require_once '../config/cors.php';
-
-setCorsHeaders();
-
-$database = new Database();
-$db = $database->getConnection();
-$movement = new Movement($db);
-
-// Validar token
-$user_data = Auth::validateToken();
-if (!$user_data) {
-    exit(); // Auth::validateToken ya envió la respuesta de error
-}
-
-$movement->user_id = $user_data->id;
+// movements.php - Manejo de movimientos financieros
+require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents('php://input'), true);
 
-switch ($method) {
-    case 'POST':
-        // Crear movimiento
-        $data = json_decode(file_get_contents("php://input"));
-        
-        if (!$data) {
-            http_response_code(400);
-            echo json_encode(array("message" => "Datos inválidos."));
-            exit();
-        }
+// Validar token para todas las operaciones
+$token = validateToken();
+$userId = getUserIdFromToken($token);
 
-        // Convertir objeto a array para validación
-        $movement_data = [
-            'fecha' => $data->fecha ?? '',
-            'tipo' => $data->tipo ?? '',
-            'categoria' => $data->categoria ?? '',
-            'monto' => $data->monto ?? '',
-            'descripcion' => $data->descripcion ?? ''
-        ];
-
-        // Validar datos del movimiento
-        $validation = Validator::validateMovement($movement_data);
-        if ($validation !== true) {
-            http_response_code(400);
-            echo json_encode(array(
-                "message" => "Datos del movimiento inválidos.",
-                "errors" => $validation
-            ));
-            Logger::validationError('Movement validation failed', [
-                'user_id' => $movement->user_id,
-                'data' => $movement_data,
-                'errors' => $validation
-            ]);
-            exit();
-        }
-
-        // Asignar datos al movimiento
-        $movement->fecha = $movement_data['fecha'];
-        $movement->tipo = $movement_data['tipo'];
-        $movement->categoria = $movement_data['categoria'];
-        $movement->monto = $movement_data['monto'];
-        $movement->descripcion = $movement_data['descripcion'];
-
-        if ($movement->create()) {
-            http_response_code(201);
-            echo json_encode(array(
-                "success" => true,
-                "message" => "Movimiento registrado exitosamente."
-            ));
-            Logger::info('Movement created', [
-                'user_id' => $movement->user_id,
-                'tipo' => $movement->tipo,
-                'monto' => $movement->monto
-            ]);
-        } else {
-            http_response_code(503);
-            echo json_encode(array("message" => "Error al registrar movimiento."));
-            Logger::error('Failed to create movement', ['user_id' => $movement->user_id]);
-        }
-        break;
-
+switch($method) {
     case 'GET':
-        // Obtener movimientos
-        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
-        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-        
-        // Validar paginación
-        $pagination_validation = Validator::validatePagination($limit, $offset);
-        if ($pagination_validation !== true) {
-            http_response_code(400);
-            echo json_encode(array(
-                "message" => "Parámetros de paginación inválidos.",
-                "errors" => $pagination_validation
-            ));
-            exit();
-        }
-
-        $stmt = $movement->getByUserId($limit, $offset);
-        $num = $stmt->rowCount();
-
-        if ($num >= 0) {
-            $movements_arr = array();
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $movements_arr[] = array(
-                    "id" => $row['id'],
-                    "fecha" => $row['fecha'],
-                    "tipo" => $row['tipo'],
-                    "categoria" => $row['categoria'],
-                    "monto" => floatval($row['monto']),
-                    "descripcion" => $row['descripcion'],
-                    "created_at" => $row['created_at']
-                );
-            }
-
-            http_response_code(200);
-            echo json_encode(array(
-                "success" => true,
-                "data" => $movements_arr,
-                "total" => $num,
-                "limit" => $limit,
-                "offset" => $offset
-            ));
-            Logger::apiRequest('/movements', 'GET', $movement->user_id);
-        } else {
-            http_response_code(200);
-            echo json_encode(array(
-                "success" => true,
-                "data" => array(),
-                "total" => 0
-            ));
-        }
+        getMovements($userId);
         break;
-
+        
+    case 'POST':
+        createMovement($userId, $input);
+        break;
+        
     case 'PUT':
-        // Actualizar movimiento
-        if (!isset($_GET['id'])) {
-            http_response_code(400);
-            echo json_encode(array("message" => "ID del movimiento requerido."));
-            exit();
-        }
-
-        $id_validation = Validator::validateId($_GET['id'], 'ID del movimiento');
-        if ($id_validation !== true) {
-            http_response_code(400);
-            echo json_encode(array("message" => $id_validation));
-            exit();
-        }
-
-        $data = json_decode(file_get_contents("php://input"));
+        $movementId = $_GET['id'] ?? null;
+        updateMovement($userId, $movementId, $input);
+        break;
         
-        if (!$data) {
-            http_response_code(400);
-            echo json_encode(array("message" => "Datos inválidos."));
-            exit();
-        }
-
-        $movement_data = [
-            'fecha' => $data->fecha ?? '',
-            'tipo' => $data->tipo ?? '',
-            'categoria' => $data->categoria ?? '',
-            'monto' => $data->monto ?? '',
-            'descripcion' => $data->descripcion ?? ''
-        ];
-
-        $validation = Validator::validateMovement($movement_data);
-        if ($validation !== true) {
-            http_response_code(400);
-            echo json_encode(array(
-                "message" => "Datos del movimiento inválidos.",
-                "errors" => $validation
-            ));
-            exit();
-        }
-
-        $movement->id = $_GET['id'];
-        $movement->fecha = $movement_data['fecha'];
-        $movement->tipo = $movement_data['tipo'];
-        $movement->categoria = $movement_data['categoria'];
-        $movement->monto = $movement_data['monto'];
-        $movement->descripcion = $movement_data['descripcion'];
-
-        if ($movement->update()) {
-            http_response_code(200);
-            echo json_encode(array(
-                "success" => true,
-                "message" => "Movimiento actualizado exitosamente."
-            ));
-            Logger::info('Movement updated', [
-                'user_id' => $movement->user_id,
-                'movement_id' => $movement->id
-            ]);
-        } else {
-            http_response_code(503);
-            echo json_encode(array("message" => "Error al actualizar movimiento."));
-        }
-        break;
-
     case 'DELETE':
-        // Eliminar movimiento
-        if (!isset($_GET['id'])) {
-            http_response_code(400);
-            echo json_encode(array("message" => "ID del movimiento requerido."));
-            exit();
-        }
-
-        $id_validation = Validator::validateId($_GET['id'], 'ID del movimiento');
-        if ($id_validation !== true) {
-            http_response_code(400);
-            echo json_encode(array("message" => $id_validation));
-            exit();
-        }
-
-        $movement->id = $_GET['id'];
-        if ($movement->delete()) {
-            http_response_code(200);
-            echo json_encode(array(
-                "success" => true,
-                "message" => "Movimiento eliminado exitosamente."
-            ));
-            Logger::info('Movement deleted', [
-                'user_id' => $movement->user_id,
-                'movement_id' => $movement->id
-            ]);
-        } else {
-            http_response_code(503);
-            echo json_encode(array("message" => "Error al eliminar movimiento."));
-        }
+        $movementId = $_GET['id'] ?? null;
+        deleteMovement($userId, $movementId);
         break;
-
+        
     default:
-        http_response_code(405);
-        echo json_encode(array("message" => "Método no permitido."));
-        break;
+        sendResponse(['error' => 'Método no permitido'], 405);
+}
+
+function getUserIdFromToken($token) {
+    // Decodificar token simple
+    $decoded = base64_decode($token);
+    $parts = explode(':', $decoded);
+    return intval($parts[0]);
+}
+
+function getMovements($userId) {
+    $db = getDB();
+    
+    try {
+        $limit = $_GET['limit'] ?? 50;
+        $offset = $_GET['offset'] ?? 0;
+        $tipo = $_GET['tipo'] ?? null;
+        $categoria = $_GET['categoria'] ?? null;
+        
+        $where = "WHERE user_id = ?";
+        $params = [$userId];
+        
+        if ($tipo) {
+            $where .= " AND tipo = ?";
+            $params[] = $tipo;
+        }
+        
+        if ($categoria) {
+            $where .= " AND categoria = ?";
+            $params[] = $categoria;
+        }
+        
+        $stmt = $db->prepare("
+            SELECT * FROM movements 
+            $where 
+            ORDER BY fecha DESC, created_at DESC 
+            LIMIT ? OFFSET ?
+        ");
+        
+        $params[] = intval($limit);
+        $params[] = intval($offset);
+        
+        $stmt->execute($params);
+        $movements = $stmt->fetchAll();
+        
+        // Obtener total de registros para paginación
+        $countStmt = $db->prepare("SELECT COUNT(*) as total FROM movements $where");
+        $countStmt->execute(array_slice($params, 0, -2));
+        $total = $countStmt->fetch()['total'];
+        
+        sendResponse([
+            'movements' => $movements,
+            'total' => $total,
+            'limit' => intval($limit),
+            'offset' => intval($offset)
+        ]);
+        
+    } catch (PDOException $e) {
+        sendResponse(['error' => 'Error al obtener movimientos'], 500);
+    }
+}
+
+function createMovement($userId, $data) {
+    $db = getDB();
+    
+    // Validar datos requeridos
+    if (!isset($data['fecha']) || !isset($data['tipo']) || 
+        !isset($data['categoria']) || !isset($data['monto'])) {
+        sendResponse(['error' => 'Datos incompletos'], 400);
+    }
+    
+    // Validar tipo
+    if (!in_array($data['tipo'], ['ingreso', 'gasto'])) {
+        sendResponse(['error' => 'Tipo debe ser ingreso o gasto'], 400);
+    }
+    
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO movements (user_id, fecha, tipo, categoria, monto, descripcion) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $userId,
+            $data['fecha'],
+            $data['tipo'],
+            $data['categoria'],
+            floatval($data['monto']),
+            $data['descripcion'] ?? null
+        ]);
+        
+        $movementId = $db->lastInsertId();
+        
+        sendResponse([
+            'success' => true,
+            'message' => 'Movimiento creado exitosamente',
+            'movement_id' => $movementId
+        ]);
+        
+    } catch (PDOException $e) {
+        sendResponse(['error' => 'Error al crear movimiento'], 500);
+    }
+}
+
+function updateMovement($userId, $movementId, $data) {
+    if (!$movementId) {
+        sendResponse(['error' => 'ID de movimiento requerido'], 400);
+    }
+    
+    $db = getDB();
+    
+    try {
+        // Verificar que el movimiento pertenece al usuario
+        $stmt = $db->prepare("SELECT id FROM movements WHERE id = ? AND user_id = ?");
+        $stmt->execute([$movementId, $userId]);
+        
+        if (!$stmt->fetch()) {
+            sendResponse(['error' => 'Movimiento no encontrado'], 404);
+        }
+        
+        $stmt = $db->prepare("
+            UPDATE movements 
+            SET fecha = ?, tipo = ?, categoria = ?, monto = ?, descripcion = ?
+            WHERE id = ? AND user_id = ?
+        ");
+        
+        $stmt->execute([
+            $data['fecha'],
+            $data['tipo'],
+            $data['categoria'],
+            floatval($data['monto']),
+            $data['descripcion'] ?? null,
+            $movementId,
+            $userId
+        ]);
+        
+        sendResponse([
+            'success' => true,
+            'message' => 'Movimiento actualizado exitosamente'
+        ]);
+        
+    } catch (PDOException $e) {
+        sendResponse(['error' => 'Error al actualizar movimiento'], 500);
+    }
+}
+
+function deleteMovement($userId, $movementId) {
+    if (!$movementId) {
+        sendResponse(['error' => 'ID de movimiento requerido'], 400);
+    }
+    
+    $db = getDB();
+    
+    try {
+        $stmt = $db->prepare("DELETE FROM movements WHERE id = ? AND user_id = ?");
+        $stmt->execute([$movementId, $userId]);
+        
+        if ($stmt->rowCount() === 0) {
+            sendResponse(['error' => 'Movimiento no encontrado'], 404);
+        }
+        
+        sendResponse([
+            'success' => true,
+            'message' => 'Movimiento eliminado exitosamente'
+        ]);
+        
+    } catch (PDOException $e) {
+        sendResponse(['error' => 'Error al eliminar movimiento'], 500);
+    }
 }
 ?>
