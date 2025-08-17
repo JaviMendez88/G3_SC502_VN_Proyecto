@@ -1,11 +1,13 @@
-// dashboard.js - MEJORADO CON FUNCIONES COMPLETAS
 let dashboardData = null;
 let currentUser = null;
 let monthlyChart = null;
 let categoriesChart = null;
+let allMovements = []; //array para almacenar movimientos
 
 // Inicializar dashboard
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Iniciando Dashboard...');
+    
     // Verificar autenticación
     if (!api.isAuthenticated()) {
         alert('Debes iniciar sesión para acceder');
@@ -16,11 +18,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Configurar modal
     preloadCategoriesOnModalOpen();
     
-    // Cargar dashboard
+    // Cargar dashboard CORREGIDO
     await loadDashboard();
 });
 
-// Cargar todos los datos del dashboard
+//Cargar todos los datos del dashboard
 async function loadDashboard() {
     try {
         showLoading(true);
@@ -28,9 +30,12 @@ async function loadDashboard() {
         // Obtener usuario actual
         currentUser = api.getCurrentUser();
         
-        // Cargar datos del dashboard
-        const response = await api.getDashboard();
-        dashboardData = response.data;
+        //Usar getMovements en lugar de getDashboard
+        console.log('Cargando movimientos...');
+        await loadMovements();
+        
+        // Procesar datos desde movimientos
+        dashboardData = processMovementsData();
         
         // Actualizar UI
         updateUserHeader();
@@ -39,16 +44,12 @@ async function loadDashboard() {
         updateRecentMovements();
         updateTopCategories();
         
-        // Crear gráficos si hay datos
-        if (dashboardData.monthly_stats && dashboardData.monthly_stats.length > 0) {
-            createMonthlyChart();
-        }
-        
-        if (dashboardData.categories_stats && dashboardData.categories_stats.length > 0) {
-            createCategoriesChart();
-        }
+        //Crear gráficos siempre 
+        createMonthlyChart();
+        createCategoriesChart();
         
         showLoading(false);
+        console.log('✅ Dashboard cargado correctamente');
         
     } catch (error) {
         console.error('Error cargando dashboard:', error);
@@ -56,6 +57,230 @@ async function loadDashboard() {
         showLoading(false);
     }
 }
+
+//Cargar movimientos (igual que en charts.js)
+async function loadMovements() {
+    try {
+        const response = await api.getMovements(1000);
+        allMovements = response.movements || [];
+        console.log(`Cargados ${allMovements.length} movimientos`);
+    } catch (error) {
+        console.error('Error cargando movimientos:', error);
+        // Generar datos de ejemplo
+        allMovements = generateSampleMovements();
+        console.log(`Generados ${allMovements.length} movimientos de ejemplo`);
+    }
+}
+
+//Procesar movimientos para crear dashboardData
+function processMovementsData() {
+    console.log('Procesando datos de movimientos...');
+    
+    // Obtener últimos 6 meses
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const recentMovements = allMovements.filter(mov => 
+        new Date(mov.fecha) >= sixMonthsAgo
+    );
+    
+    // Calcular estadísticas básicas
+    const totalIngresos = recentMovements
+        .filter(mov => mov.tipo === 'ingreso')
+        .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
+        
+    const totalGastos = recentMovements
+        .filter(mov => mov.tipo === 'gasto')
+        .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
+    
+    const balanceTotal = totalIngresos - totalGastos;
+    const savingsRate = totalIngresos > 0 ? ((balanceTotal / totalIngresos) * 100).toFixed(1) : 0;
+    
+    // Generar estadísticas mensuales
+    const monthlyStats = generateMonthlyStats();
+    
+    // Generar estadísticas de categorías
+    const categoriesStats = generateCategoriesStats();
+    
+    // Obtener mes actual
+    const currentMonthSummary = getCurrentMonthSummary();
+    
+    // Top categorías
+    const topCategories = getTopCategories();
+    
+    return {
+        balance: {
+            total_ingresos: totalIngresos,
+            total_gastos: totalGastos,
+            balance_total: balanceTotal,
+            savings_rate: savingsRate
+        },
+        monthly_stats: monthlyStats,
+        categories_stats: categoriesStats,
+        current_month_summary: currentMonthSummary,
+        recent_movements: allMovements.slice(0, 20), // Últimos 20
+        top_categories: topCategories
+    };
+}
+
+//Generar estadísticas mensuales (igual que charts.js)
+function generateMonthlyStats() {
+    const months = [];
+    const currentDate = new Date();
+    
+    // Últimos 6 meses
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        months.push(date);
+    }
+    
+    return months.map(month => {
+        const monthName = month.toLocaleDateString('es-CR', { month: 'long', year: 'numeric' });
+        const ingresos = getMonthlyTotal(month, 'ingreso');
+        const gastos = getMonthlyTotal(month, 'gasto');
+        
+        return {
+            mes: month.getMonth() + 1,
+            ano: month.getFullYear(),
+            mes_nombre: monthName,
+            ingresos: ingresos,
+            gastos: gastos
+        };
+    });
+}
+
+//Generar estadísticas de categorías
+function generateCategoriesStats() {
+    const last3Months = new Date();
+    last3Months.setMonth(last3Months.getMonth() - 3);
+    
+    const recentMovements = allMovements.filter(mov => 
+        new Date(mov.fecha) >= last3Months
+    );
+    
+    const categoryTotals = {};
+    recentMovements.forEach(mov => {
+        const key = `${mov.categoria}_${mov.tipo}`;
+        if (!categoryTotals[key]) {
+            categoryTotals[key] = {
+                categoria: mov.categoria,
+                tipo: mov.tipo,
+                total: 0,
+                count: 0
+            };
+        }
+        categoryTotals[key].total += parseFloat(mov.monto || 0);
+        categoryTotals[key].count++;
+    });
+    
+    return Object.values(categoryTotals);
+}
+
+// Resumen del mes actual
+function getCurrentMonthSummary() {
+    const currentMonth = new Date();
+    currentMonth.setDate(1); // Primer día del mes
+    
+    const currentMonthMovements = allMovements.filter(mov => {
+        const movDate = new Date(mov.fecha);
+        return movDate.getMonth() === currentMonth.getMonth() && 
+               movDate.getFullYear() === currentMonth.getFullYear();
+    });
+    
+    const recentIncome = currentMonthMovements
+        .filter(mov => mov.tipo === 'ingreso')
+        .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
+        
+    const recentExpenses = currentMonthMovements
+        .filter(mov => mov.tipo === 'gasto')
+        .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
+    
+    const daysInMonth = new Date().getDate(); // Días transcurridos del mes
+    const dailyAverage = daysInMonth > 0 ? (recentIncome + recentExpenses) / daysInMonth : 0;
+    
+    return {
+        total_movements: currentMonthMovements.length,
+        recent_income: recentIncome,
+        recent_expenses: recentExpenses,
+        daily_average: dailyAverage
+    };
+}
+
+// Top categorías
+function getTopCategories() {
+    const last3Months = new Date();
+    last3Months.setMonth(last3Months.getMonth() - 3);
+    
+    const recentExpenses = allMovements.filter(mov => 
+        mov.tipo === 'gasto' && new Date(mov.fecha) >= last3Months
+    );
+    
+    const categoryTotals = {};
+    recentExpenses.forEach(mov => {
+        if (!categoryTotals[mov.categoria]) {
+            categoryTotals[mov.categoria] = {
+                categoria: mov.categoria,
+                total: 0,
+                count: 0
+            };
+        }
+        categoryTotals[mov.categoria].total += parseFloat(mov.monto || 0);
+        categoryTotals[mov.categoria].count++;
+    });
+    
+    return Object.values(categoryTotals)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+}
+
+//Obtener total mensual
+function getMonthlyTotal(month, tipo) {
+    const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+    const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+    
+    return allMovements
+        .filter(mov => {
+            const movDate = new Date(mov.fecha);
+            return mov.tipo === tipo && movDate >= startOfMonth && movDate <= endOfMonth;
+        })
+        .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
+}
+
+// Generar datos de ejemplo 
+function generateSampleMovements() {
+    const movements = [];
+    const categories = ['Alimentación', 'Transporte', 'Entretenimiento', 'Servicios', 'Salario', 'Freelance'];
+    
+    // Generar datos para los últimos 6 meses
+    for (let month = 0; month < 6; month++) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - month);
+        
+        // Generar movimientos por mes
+        for (let i = 0; i < Math.floor(Math.random() * 20) + 10; i++) {
+            const day = Math.floor(Math.random() * 28) + 1;
+            const movDate = new Date(date.getFullYear(), date.getMonth(), day);
+            
+            const isIncome = Math.random() > 0.7;
+            const categoria = categories[Math.floor(Math.random() * categories.length)];
+            const monto = isIncome ? 
+                Math.floor(Math.random() * 300000) + 50000 : 
+                Math.floor(Math.random() * 30000) + 5000;
+            
+            movements.push({
+                id: movements.length + 1,
+                fecha: movDate.toISOString().split('T')[0],
+                tipo: isIncome ? 'ingreso' : 'gasto',
+                categoria: categoria,
+                monto: monto,
+                descripcion: `${isIncome ? 'Ingreso' : 'Gasto'} de ${categoria}`
+            });
+        }
+    }
+    
+    return movements;
+}
+
 
 // Mostrar/ocultar loading
 function showLoading(show) {
@@ -227,25 +452,42 @@ function updateTopCategories() {
     });
 }
 
-// Crear gráfico mensual
+//Crear gráfico mensual (mini-versión)
 function createMonthlyChart() {
     const ctx = document.getElementById('monthlyChart');
-    if (!ctx || !dashboardData.monthly_stats) return;
+    if (!ctx) {
+        console.warn('No se encontró canvas monthlyChart');
+        return;
+    }
     
-    const monthlyStats = dashboardData.monthly_stats;
+    console.log('Creando gráfico mensual del dashboard...');
+    
+    const monthlyStats = dashboardData?.monthly_stats || [];
+    
+    // Si no hay datos, usar datos de ejemplo
+    if (monthlyStats.length === 0) {
+        console.log('No hay datos mensuales, saltando gráfico');
+        ctx.parentElement.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-chart-line fa-3x mb-3 d-block"></i>
+                <p>No hay datos suficientes</p>
+                <a href="userProfile_charts.html" class="btn btn-sm btn-primary">Ver gráficas completas</a>
+            </div>
+        `;
+        return;
+    }
     
     // Preparar datos
-    const labels = monthlyStats.map(m => m.mes_nombre || `Mes ${m.mes}`);
+    const labels = monthlyStats.map(m => m.mes_nombre?.split(' ')[0] || `Mes ${m.mes}`);
     const ingresos = monthlyStats.map(m => m.ingresos || 0);
     const gastos = monthlyStats.map(m => m.gastos || 0);
-    const balance = monthlyStats.map(m => (m.ingresos || 0) - (m.gastos || 0));
     
     // Destruir gráfico anterior si existe
     if (monthlyChart) {
         monthlyChart.destroy();
     }
     
-    // Crear nuevo gráfico
+    // Crear nuevo gráfico 
     monthlyChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -256,56 +498,31 @@ function createMonthlyChart() {
                     data: ingresos,
                     borderColor: '#198754',
                     backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    borderWidth: 3,
+                    borderWidth: 2,
                     fill: false,
                     tension: 0.4,
-                    pointBackgroundColor: '#198754',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5
+                    pointRadius: 3
                 },
                 {
                     label: 'Gastos',
                     data: gastos,
                     borderColor: '#dc3545',
                     backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 3,
+                    borderWidth: 2,
                     fill: false,
                     tension: 0.4,
-                    pointBackgroundColor: '#dc3545',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5
-                },
-                {
-                    label: 'Balance',
-                    data: balance,
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    borderWidth: 3,
-                    fill: false,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ffc107',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5
+                    pointRadius: 3
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
             plugins: {
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     titleColor: '#fff',
                     bodyColor: '#fff',
-                    borderColor: '#ffc107',
-                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
@@ -316,56 +533,52 @@ function createMonthlyChart() {
                     position: 'top',
                     labels: {
                         usePointStyle: true,
-                        padding: 20
+                        padding: 10,
+                        font: { size: 11 }
                     }
                 }
             },
             scales: {
                 x: {
                     display: true,
-                    title: {
-                        display: true,
-                        text: 'Meses',
-                        color: '#6c757d'
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
                 },
                 y: {
                     display: true,
-                    title: {
-                        display: true,
-                        text: 'Monto (₡)',
-                        color: '#6c757d'
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
                     ticks: {
                         callback: function(value) {
-                            return formatCurrency(value);
-                        }
+                            return api.formatCurrency ? api.formatCurrency(value) : formatCurrency(value);
+                        },
+                        font: { size: 10 }
                     }
                 }
             }
         }
     });
+    
+    console.log('✅ Gráfico mensual creado');
 }
 
-// Crear gráfico de categorías
+// Crear gráfico de categorías (mini-versión)
 function createCategoriesChart() {
     const ctx = document.getElementById('categoriesChart');
-    if (!ctx || !dashboardData.categories_stats) return;
+    if (!ctx) {
+        console.warn('⚠️ No se encontró canvas categoriesChart');
+        return;
+    }
+    
+    console.log('🥧 Creando gráfico de categorías del dashboard...');
     
     // Filtrar solo gastos para el gráfico
-    const gastos = dashboardData.categories_stats.filter(cat => cat.tipo === 'gasto');
+    const gastos = (dashboardData?.categories_stats || []).filter(cat => cat.tipo === 'gasto');
     
     if (gastos.length === 0) {
+        console.log('🥧 No hay datos de gastos, mostrando mensaje');
         ctx.parentElement.innerHTML = `
             <div class="text-center text-muted py-4">
                 <i class="fas fa-chart-pie fa-3x mb-3 d-block"></i>
-                <p>No hay datos de gastos por categoría</p>
+                <p>No hay gastos por categoría</p>
                 <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoMovimiento">
                     <i class="fas fa-plus me-1"></i>Agregar gasto
                 </button>
@@ -374,13 +587,13 @@ function createCategoriesChart() {
         return;
     }
     
-    // Preparar datos
-    const labels = gastos.map(cat => cat.categoria);
-    const data = gastos.map(cat => cat.total);
+    // Preparar datos (top 6 categorías)
+    const topGastos = gastos.sort((a, b) => b.total - a.total).slice(0, 6);
+    const labels = topGastos.map(cat => cat.categoria);
+    const data = topGastos.map(cat => cat.total);
     const colors = [
         '#ffc107', '#dc3545', '#198754', '#0d6efd',
-        '#6f42c1', '#fd7e14', '#20c997', '#e83e8c',
-        '#6c757d', '#17a2b8'
+        '#6f42c1', '#fd7e14'
     ];
     
     // Destruir gráfico anterior si existe
@@ -388,7 +601,7 @@ function createCategoriesChart() {
         categoriesChart.destroy();
     }
     
-    // Crear nuevo gráfico
+    // Crear nuevo gráfico (versión simple para dashboard)
     categoriesChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -396,9 +609,8 @@ function createCategoriesChart() {
             datasets: [{
                 data: data,
                 backgroundColor: colors.slice(0, labels.length),
-                borderWidth: 3,
-                borderColor: '#fff',
-                hoverBorderWidth: 4
+                borderWidth: 2,
+                borderColor: '#fff'
             }]
         },
         options: {
@@ -408,19 +620,15 @@ function createCategoriesChart() {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        padding: 15,
+                        padding: 10,
                         usePointStyle: true,
-                        font: {
-                            size: 12
-                        }
+                        font: { size: 10 }
                     }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     titleColor: '#fff',
                     bodyColor: '#fff',
-                    borderColor: '#ffc107',
-                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -432,6 +640,8 @@ function createCategoriesChart() {
             }
         }
     });
+    
+    console.log('✅ Gráfico de categorías creado');
 }
 
 // === FUNCIONES DE UTILIDAD ===
@@ -446,7 +656,11 @@ function updateElement(id, value) {
 
 // Formatear moneda
 function formatCurrency(amount) {
-    return api.formatCurrency(amount);
+    if (api && api.formatCurrency) {
+        return api.formatCurrency(amount);
+    }
+    // Fallback
+    return `₡ ${new Intl.NumberFormat('es-CR').format(amount)}`;
 }
 
 // Formatear fecha
@@ -468,67 +682,6 @@ function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// === FUNCIONES GLOBALES ===
-
-// Actualizar dashboard
-async function refreshDashboard() {
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    
-    try {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
-        
-        await loadDashboard();
-        
-        api.showMessage('Dashboard actualizado exitosamente', 'success');
-        
-    } catch (error) {
-        api.showMessage('Error al actualizar dashboard', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-}
-
-// Exportar datos
-function exportData() {
-    try {
-        if (!dashboardData || !dashboardData.recent_movements) {
-            alert('⚠️ No hay datos para exportar');
-            return;
-        }
-        
-        // Crear CSV con los movimientos
-        let csv = 'Fecha,Tipo,Categoría,Monto,Descripción\n';
-        
-        dashboardData.recent_movements.forEach(mov => {
-            const fecha = formatDate(mov.fecha);
-            const descripcion = (mov.descripcion || '').replace(/,/g, ';'); // Reemplazar comas
-            csv += `${fecha},${mov.tipo},${mov.categoria},${mov.monto},"${descripcion}"\n`;
-        });
-        
-        // Descargar archivo
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `fidefinance-movimientos-${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        api.showMessage('Datos exportados exitosamente', 'success');
-        
-    } catch (error) {
-        console.error('Error exportando datos:', error);
-        api.showMessage('Error al exportar datos', 'error');
-    }
-}
-
-// === GESTIÓN DE CATEGORÍAS EN DASHBOARD ===
-
 let dashboardCategories = []; // Cache de categorías
 
 // Cargar categorías cuando se selecciona el tipo
@@ -540,70 +693,49 @@ async function loadCategoriesForType() {
     const selectedType = tipoSelect.value;
     
     if (!selectedType) {
-        // Si no hay tipo seleccionado, deshabilitar categorías
         categoriaSelect.disabled = true;
         categoriaSelect.innerHTML = '<option value="">Selecciona un tipo primero</option>';
         return;
     }
     
     try {
-        // Mostrar indicador de carga
         loadingIndicator.style.display = 'block';
         categoriaSelect.disabled = true;
         categoriaSelect.innerHTML = '<option value="">Cargando categorías...</option>';
         
-        console.log('🔄 Cargando categorías para tipo:', selectedType);
-        
-        // Si no tenemos categorías en cache, cargarlas
         if (dashboardCategories.length === 0) {
             const response = await api.getCategories();
             if (response.success && response.data) {
                 dashboardCategories = response.data.all || [];
-                console.log('✅ Categorías cargadas en cache:', dashboardCategories.length);
             } else {
                 throw new Error('Error al cargar categorías');
             }
         }
         
-        // Filtrar categorías por tipo
         const filteredCategories = dashboardCategories.filter(cat => cat.tipo === selectedType);
-        console.log(`📋 Categorías de ${selectedType}:`, filteredCategories.length);
-        
-        // Poblar el select
         populateCategoriesSelect(categoriaSelect, filteredCategories, selectedType);
-        
-        // Habilitar select
         categoriaSelect.disabled = false;
         
     } catch (error) {
         console.error('Error cargando categorías:', error);
-        
-        // Mostrar categorías por defecto en caso de error
         const defaultCategories = getDefaultCategories(selectedType);
         populateCategoriesSelect(categoriaSelect, defaultCategories, selectedType);
         categoriaSelect.disabled = false;
-        
-        // Mostrar mensaje de error sutil
         showCategoriesError();
-        
     } finally {
-        // Ocultar indicador de carga
         loadingIndicator.style.display = 'none';
     }
 }
 
 // Poblar el select con las categorías
 function populateCategoriesSelect(selectElement, categories, type) {
-    // Limpiar opciones existentes
     selectElement.innerHTML = '';
     
-    // Agregar opción por defecto
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = `Seleccionar categoría de ${type}`;
     selectElement.appendChild(defaultOption);
     
-    // Agregar categorías
     if (categories.length === 0) {
         const noCategories = document.createElement('option');
         noCategories.value = '';
@@ -613,30 +745,20 @@ function populateCategoriesSelect(selectElement, categories, type) {
         return;
     }
     
-    // Ordenar categorías alfabéticamente
     const sortedCategories = categories.sort((a, b) => a.nombre.localeCompare(b.nombre));
     
     sortedCategories.forEach(category => {
         const option = document.createElement('option');
         option.value = category.nombre;
         
-        // Crear texto con icono si existe
         let iconText = '';
-        if (category.icon) {
-            if (category.icon.startsWith('fas ') || category.icon.startsWith('far ') || category.icon.startsWith('fab ')) {
-                // Para iconos Font Awesome, solo usar el nombre
-                iconText = '';
-            } else {
-                // Para emojis, agregarlos
-                iconText = `${category.icon} `;
-            }
+        if (category.icon && !category.icon.startsWith('fas ')) {
+            iconText = `${category.icon} `;
         }
         
         option.textContent = `${iconText}${category.nombre}`;
         selectElement.appendChild(option);
     });
-    
-    console.log(`✅ ${categories.length} categorías agregadas al select`);
 }
 
 // Obtener categorías por defecto en caso de error
@@ -667,7 +789,6 @@ function showCategoriesError() {
     if (formText) {
         formText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning me-1"></i>Error cargando categorías. Usando categorías por defecto.';
         
-        // Restaurar texto original después de 5 segundos
         setTimeout(() => {
             formText.innerHTML = '<i class="fas fa-info-circle me-1"></i>Las categorías se cargan según el tipo seleccionado';
         }, 5000);
@@ -678,38 +799,28 @@ function showCategoriesError() {
 function limpiarFormularioMovimiento() {
     document.getElementById('formNuevoMovimiento').reset();
     
-    // Restablecer estado de categorías
     const categoriaSelect = document.getElementById('categoriaMovimiento');
     categoriaSelect.disabled = true;
     categoriaSelect.innerHTML = '<option value="">Selecciona un tipo primero</option>';
     
-    // Ocultar indicador de carga
     document.getElementById('categoriesLoadingIndicator').style.display = 'none';
     
-    // Establecer fecha actual por defecto
     const fechaInput = document.getElementById('fechaMovimiento');
     const today = new Date().toISOString().split('T')[0];
     fechaInput.value = today;
-    
-    console.log('🧹 Formulario de movimiento limpiado');
 }
 
 // Pre-cargar categorías cuando se abre el modal
 function preloadCategoriesOnModalOpen() {
-    // Listener para cuando se abre el modal
     const modal = document.getElementById('modalNuevoMovimiento');
     if (modal) {
         modal.addEventListener('show.bs.modal', function() {
-            console.log('📂 Modal de nuevo movimiento abierto');
             limpiarFormularioMovimiento();
             
-            // Pre-cargar categorías en background si no están en cache
             if (dashboardCategories.length === 0) {
-                console.log('🔄 Pre-cargando categorías en background...');
                 api.getCategories().then(response => {
                     if (response.success && response.data) {
                         dashboardCategories = response.data.all || [];
-                        console.log('✅ Categorías pre-cargadas:', dashboardCategories.length);
                     }
                 }).catch(error => {
                     console.warn('⚠️ Error pre-cargando categorías:', error);
@@ -719,27 +830,16 @@ function preloadCategoriesOnModalOpen() {
     }
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    preloadCategoriesOnModalOpen();
-});
-
-// Hacer funciones globales
-window.loadCategoriesForType = loadCategoriesForType;
-window.limpiarFormularioMovimiento = limpiarFormularioMovimiento;
-
-// === GUARDAR MOVIMIENTO ACTUALIZADO ===
-
+// Guardar movimiento
 async function guardarMovimiento() {
     try {
-        // Obtener datos del formulario
         const fecha = document.getElementById('fechaMovimiento').value;
         const tipo = document.getElementById('tipoMovimiento').value;
         const categoria = document.getElementById('categoriaMovimiento').value;
         const monto = document.getElementById('montoMovimiento').value;
         const descripcion = document.getElementById('descripcionMovimiento').value.trim();
         
-        // Validaciones mejoradas
+        // Validaciones
         if (!fecha) {
             alert('Por favor selecciona una fecha');
             document.getElementById('fechaMovimiento').focus();
@@ -764,10 +864,10 @@ async function guardarMovimiento() {
             return;
         }
         
-        // Validar que la fecha no sea futura (opcional)
+        // Validar fecha futura
         const fechaSeleccionada = new Date(fecha);
         const hoy = new Date();
-        hoy.setHours(23, 59, 59, 999); // Hasta el final del día
+        hoy.setHours(23, 59, 59, 999);
         
         if (fechaSeleccionada > hoy) {
             const confirmar = confirm('⚠️ La fecha seleccionada es futura. ¿Deseas continuar?');
@@ -782,7 +882,7 @@ async function guardarMovimiento() {
         saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
         saveButton.disabled = true;
         
-        // Preparar datos para enviar
+        // Preparar datos
         const movementData = {
             fecha: fecha,
             tipo: tipo,
@@ -791,7 +891,7 @@ async function guardarMovimiento() {
             descripcion: descripcion || null
         };
         
-        console.log('💾 Guardando movimiento:', movementData);
+        console.log('Guardando movimiento:', movementData);
         
         // Enviar al backend
         const response = await api.createMovement(movementData);
@@ -806,8 +906,8 @@ async function guardarMovimiento() {
             // Limpiar formulario
             limpiarFormularioMovimiento();
             
-            // Actualizar dashboard (recargar datos)
-            await refreshDashboardData();
+            // Actualizar dashboard
+            await loadDashboard();
             
             // Mostrar mensaje de éxito
             showSuccessMessage('Movimiento guardado exitosamente');
@@ -838,35 +938,8 @@ async function guardarMovimiento() {
     }
 }
 
-// Refrescar datos del dashboard después de guardar
-async function refreshDashboardData() {
-    try {
-        console.log('🔄 Actualizando datos del dashboard...');
-        
-        // Si tienes una función loadDashboard, llamarla
-        if (typeof loadDashboard === 'function') {
-            await loadDashboard();
-        }
-        
-        // O si tienes funciones específicas, llamarlas
-        if (typeof loadRecentMovements === 'function') {
-            await loadRecentMovements();
-        }
-        
-        if (typeof updateStatsCards === 'function') {
-            await updateStatsCards();
-        }
-        
-        console.log('✅ Dashboard actualizado');
-        
-    } catch (error) {
-        console.warn('⚠️ Error actualizando dashboard:', error);
-    }
-}
-
 // Mostrar mensaje de éxito
 function showSuccessMessage(message) {
-    // Crear toast de éxito (si tienes Bootstrap toast)
     if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
         const toastHtml = `
             <div class="toast align-items-center text-white bg-success border-0" role="alert">
@@ -879,7 +952,6 @@ function showSuccessMessage(message) {
             </div>
         `;
         
-        // Agregar toast al DOM y mostrarlo
         const toastContainer = document.querySelector('.toast-container') || document.body;
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = toastHtml;
@@ -889,29 +961,72 @@ function showSuccessMessage(message) {
         const toast = new bootstrap.Toast(toastElement);
         toast.show();
         
-        // Remover del DOM después de que se oculte
         toastElement.addEventListener('hidden.bs.toast', () => {
             toastElement.remove();
         });
     } else {
-        // Fallback con alert
         alert('✅ ' + message);
     }
 }
 
-// Función auxiliar para actualizar solo el botón
-function refreshDashboard() {
-    refreshDashboardData().then(() => {
-        showSuccessMessage('Dashboard actualizado');
-    }).catch(error => {
+// Actualizar dashboard
+async function refreshDashboard() {
+    const btn = event?.target;
+    let originalText = '';
+    
+    if (btn) {
+        originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+    }
+    
+    try {
+        await loadDashboard();
+        showSuccessMessage('Dashboard actualizado exitosamente');
+    } catch (error) {
         alert('Error al actualizar dashboard');
         console.error(error);
-    });
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
 }
 
-// Hacer funciones globales
-window.guardarMovimiento = guardarMovimiento;
-window.refreshDashboard = refreshDashboard;
+// Exportar datos
+function exportData() {
+    try {
+        if (!dashboardData || !dashboardData.recent_movements) {
+            alert('⚠️ No hay datos para exportar');
+            return;
+        }
+        
+        let csv = 'Fecha,Tipo,Categoría,Monto,Descripción\n';
+        
+        dashboardData.recent_movements.forEach(mov => {
+            const fecha = formatDate(mov.fecha);
+            const descripcion = (mov.descripcion || '').replace(/,/g, ';');
+            csv += `${fecha},${mov.tipo},${mov.categoria},${mov.monto},"${descripcion}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `fidefinance-movimientos-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showSuccessMessage('Datos exportados exitosamente');
+        
+    } catch (error) {
+        console.error('Error exportando datos:', error);
+        alert('Error al exportar datos');
+    }
+}
 
 // Cerrar sesión
 function cerrarSesion() {
@@ -921,7 +1036,9 @@ function cerrarSesion() {
 }
 
 // Hacer funciones disponibles globalmente
+window.loadCategoriesForType = loadCategoriesForType;
+window.limpiarFormularioMovimiento = limpiarFormularioMovimiento;
+window.guardarMovimiento = guardarMovimiento;
 window.refreshDashboard = refreshDashboard;
 window.exportData = exportData;
 window.cerrarSesion = cerrarSesion;
-window.guardarMovimiento = guardarMovimiento;

@@ -8,7 +8,7 @@ let currentPeriod = 6; // Período actual en meses
 document.addEventListener('DOMContentLoaded', async function() {
     // Verificar autenticación
     if (!api.isAuthenticated()) {
-        alert('❌ Debes iniciar sesión para acceder');
+        alert('Debes iniciar sesión para acceder');
         window.location.href = 'user_logIn.html';
         return;
     }
@@ -333,9 +333,8 @@ async function createComparisonChart() {
     });
 }
 
-// === PREPARACIÓN DE DATOS ===
 
-// FUNCIÓN CORREGIDA: Obtener meses según período actual
+//Obtener meses según período actual
 function getMonthsForPeriod() {
     const months = [];
     const currentDate = new Date();
@@ -567,7 +566,7 @@ function prepareDailyChartData() {
     };
 }
 
-// Preparar datos de categorías (CORREGIDA)
+// Preparar datos de categorías 
 function prepareCategoryData() {
     const periodMonths = new Date();
     periodMonths.setMonth(periodMonths.getMonth() - Math.min(currentPeriod, 3)); // Máximo 3 meses para categorías
@@ -602,7 +601,7 @@ function prepareCategoryData() {
     };
 }
 
-// Preparar datos de balance (CORREGIDA)
+// Preparar datos de balance 
 function prepareBalanceData() {
     const months = getMonthsForPeriod(); // Usar 
     
@@ -630,7 +629,7 @@ function prepareBalanceData() {
     };
 }
 
-// Preparar datos de comparación (CORREGIDA)
+// Preparar datos de comparación 
 function prepareComparisonData() {
     const months = getMonthsForPeriod(); // Usar 
     
@@ -660,7 +659,7 @@ function prepareComparisonData() {
 
 // === FUNCIONES DE CONTROL ===
 
-// Actualizar todas las gráficas (CORREGIDA)
+// Actualizar todas las gráficas 
 function updateCharts() {
     console.log('=== ACTUALIZANDO GRÁFICAS ===');
     console.log('Período:', currentPeriod, 'meses');
@@ -685,10 +684,10 @@ function updateCharts() {
         periodElement.textContent = periodText[currentPeriod] || `Últimos ${currentPeriod} meses`;
     }
     
-    console.log('✅ Gráficas actualizadas correctamente');
+    console.log('Gráficas actualizadas correctamente');
 }
 
-// Actualizar gráfica principal (CORREGIDA)
+// Actualizar gráfica principal
 function updateMainChart() {
     if (charts.main) {
         charts.main.destroy();
@@ -699,7 +698,7 @@ function updateMainChart() {
     updateChartTitle();
 }
 
-// Cambiar vista de la gráfica principal (CORREGIDA)
+// Cambiar vista de la gráfica principal 
 function changeChartView(view) {
     console.log('Cambiando vista a:', view);
     currentView = view;
@@ -749,7 +748,7 @@ function updateChartTitle() {
 
 // === MÉTRICAS Y CÁLCULOS ===
 
-// Actualizar métricas clave (CORREGIDA)
+// Actualizar métricas clave 
 function updateMetrics() {
     const months = getMonthsForPeriod(); // Usar período actual
     
@@ -814,7 +813,7 @@ function calculateVariation(values) {
 
 // === INSIGHTS AUTOMÁTICOS ===
 
-// Generar insights automáticos (CORREGIDA)
+// Generar insights automáticos 
 function generateInsights() {
     const insights = [];
     const months = getMonthsForPeriod(); // Usar período actual
@@ -899,7 +898,7 @@ function calculateTrend(values) {
     return slope;
 }
 
-// Obtener categoría de gasto principal (CORREGIDA)
+// Obtener categoría de gasto principal 
 function getTopExpenseCategory() {
     const periodMonths = new Date();
     periodMonths.setMonth(periodMonths.getMonth() - Math.min(currentPeriod, 3));
@@ -1089,11 +1088,11 @@ function exportChart() {
         link.href = canvas.toDataURL();
         link.click();
         
-        alert('✅ Gráficas exportadas exitosamente');
+        alert('Gráficas exportadas exitosamente');
         
     } catch (error) {
         console.error('Error exportando gráficas:', error);
-        alert('❌ Error al exportar las gráficas');
+        alert('Error al exportar las gráficas');
     }
 }
 
@@ -1170,7 +1169,7 @@ function showError(message) {
     if (chartsContent) {
         chartsContent.innerHTML = `
             <div class="alert alert-danger">
-                <h5>❌ Error</h5>
+                <h5>Error</h5>
                 <p>${message}</p>
                 <button class="btn btn-primary" onclick="location.reload()">
                     <i class="fas fa-sync me-1"></i>Reintentar
