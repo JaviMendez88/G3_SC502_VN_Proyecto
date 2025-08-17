@@ -8,7 +8,7 @@ let categories = [];
 document.addEventListener('DOMContentLoaded', async function() {
     // Verificar autenticación
     if (!api.isAuthenticated()) {
-        alert('❌ Debes iniciar sesión para acceder');
+        alert('Debes iniciar sesión para acceder');
         window.location.href = 'user_logIn.html';
         return;
     }
@@ -124,7 +124,7 @@ function calculateStatistics() {
         
     } catch (error) {
         console.error('Error calculando estadísticas:', error);
-        alert('❌ Error al calcular estadísticas');
+        alert('Error al calcular estadísticas');
     }
 }
 
@@ -608,7 +608,7 @@ function exportStatistics() {
         
     } catch (error) {
         console.error('Error exportando estadísticas:', error);
-        alert('❌ Error al exportar estadísticas');
+        alert('Error al exportar estadísticas');
     }
 }
 
@@ -728,7 +728,7 @@ function showError(message) {
     if (statisticsContent) {
         statisticsContent.innerHTML = `
             <div class="alert alert-danger">
-                <h5>❌ Error</h5>
+                <h5>Error</h5>
                 <p>${message}</p>
                 <button class="btn btn-primary" onclick="location.reload()">
                     <i class="fas fa-sync me-1"></i>Reintentar

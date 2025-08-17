@@ -102,7 +102,8 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label for="chartPeriod" class="form-label">Periodo de Análisis</label>
-                                    <select class="form-select" id="chartPeriod" onchange="updateCharts()">
+                                    <!-- CORREGIDO: Cambiar onchange="updateCharts()" por onchange="changePeriod()" -->
+                                    <select class="form-select" id="chartPeriod" onchange="changePeriod()">
                                         <option value="3">Últimos 3 meses</option>
                                         <option value="6" selected>Últimos 6 meses</option>
                                         <option value="12">Último año</option>
@@ -119,7 +120,8 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="dataView" class="form-label">Vista de Datos</label>
-                                    <select class="form-select" id="dataView" onchange="updateCharts()">
+                                    <!-- CORREGIDO: Cambiar onchange="updateCharts()" por onchange="updateMainChart()" -->
+                                    <select class="form-select" id="dataView" onchange="updateMainChart()">
                                         <option value="both">💰💸 Ingresos y Gastos</option>
                                         <option value="income">💰 Solo Ingresos</option>
                                         <option value="expense">💸 Solo Gastos</option>

@@ -8,7 +8,7 @@ let categoriesChart = null;
 document.addEventListener('DOMContentLoaded', async function() {
     // Verificar autenticación
     if (!api.isAuthenticated()) {
-        alert('❌ Debes iniciar sesión para acceder');
+        alert('Debes iniciar sesión para acceder');
         window.location.href = 'user_logIn.html';
         return;
     }
@@ -79,7 +79,7 @@ function showError(message) {
     if (headerSection) {
         headerSection.innerHTML = `
             <div class="alert alert-danger">
-                <h5>❌ Error</h5>
+                <h5>Error</h5>
                 <p>${message}</p>
                 <button class="btn btn-primary" onclick="location.reload()">
                     <i class="fas fa-sync me-1"></i>Reintentar
@@ -576,7 +576,7 @@ async function loadCategoriesForType() {
         categoriaSelect.disabled = false;
         
     } catch (error) {
-        console.error('❌ Error cargando categorías:', error);
+        console.error('Error cargando categorías:', error);
         
         // Mostrar categorías por defecto en caso de error
         const defaultCategories = getDefaultCategories(selectedType);
@@ -741,25 +741,25 @@ async function guardarMovimiento() {
         
         // Validaciones mejoradas
         if (!fecha) {
-            alert('❌ Por favor selecciona una fecha');
+            alert('Por favor selecciona una fecha');
             document.getElementById('fechaMovimiento').focus();
             return;
         }
         
         if (!tipo) {
-            alert('❌ Por favor selecciona un tipo (Ingreso o Gasto)');
+            alert('Por favor selecciona un tipo (Ingreso o Gasto)');
             document.getElementById('tipoMovimiento').focus();
             return;
         }
         
         if (!categoria) {
-            alert('❌ Por favor selecciona una categoría');
+            alert('Por favor selecciona una categoría');
             document.getElementById('categoriaMovimiento').focus();
             return;
         }
         
         if (!monto || parseFloat(monto) <= 0) {
-            alert('❌ Por favor ingresa un monto válido mayor a 0');
+            alert('Por favor ingresa un monto válido mayor a 0');
             document.getElementById('montoMovimiento').focus();
             return;
         }
@@ -817,7 +817,7 @@ async function guardarMovimiento() {
         }
         
     } catch (error) {
-        console.error('❌ Error guardando movimiento:', error);
+        console.error('Error guardando movimiento:', error);
         
         let errorMessage = 'Error al guardar el movimiento';
         if (error.message.includes('Sesión expirada')) {
@@ -826,7 +826,7 @@ async function guardarMovimiento() {
             errorMessage = error.message;
         }
         
-        alert('❌ ' + errorMessage);
+        alert('' + errorMessage);
         
     } finally {
         // Restaurar botón
@@ -904,7 +904,7 @@ function refreshDashboard() {
     refreshDashboardData().then(() => {
         showSuccessMessage('Dashboard actualizado');
     }).catch(error => {
-        alert('❌ Error al actualizar dashboard');
+        alert('Error al actualizar dashboard');
         console.error(error);
     });
 }

@@ -91,11 +91,11 @@ class FideFinanceAPI {
                 alert('✅ Usuario registrado exitosamente');
                 return result;
             } else {
-                alert('❌ Error: ' + (result.error || 'Error desconocido'));
+                alert('Error: ' + (result.error || 'Error desconocido'));
                 throw new Error(result.error || 'Error en registro');
             }
         } catch (error) {
-            alert('❌ Error de conexión: ' + error.message);
+            alert('Error de conexión: ' + error.message);
             throw error;
         }
     }
@@ -123,11 +123,11 @@ class FideFinanceAPI {
                 alert('✅ Login exitoso. ¡Bienvenido ' + result.user.nombre + '!');
                 return result;
             } else {
-                alert('❌ Error: ' + (result.error || 'Credenciales incorrectas'));
+                alert('Error: ' + (result.error || 'Credenciales incorrectas'));
                 throw new Error(result.error || 'Error en login');
             }
         } catch (error) {
-            alert('❌ Error de conexión: ' + error.message);
+            alert('Error de conexión: ' + error.message);
             throw error;
         }
     }
@@ -146,14 +146,14 @@ class FideFinanceAPI {
                 alert('✅ Movimiento guardado exitosamente');
                 return result;
             } else {
-                alert('❌ Error: ' + (result.error || 'Error al guardar'));
+                alert('Error: ' + (result.error || 'Error al guardar'));
                 throw new Error(result.error || 'Error al crear movimiento');
             }
         } catch (error) {
             if (error.message === 'Sesión expirada') {
                 return; // Ya se maneja la redirección
             }
-            alert('❌ Error: ' + error.message);
+            alert('Error: ' + error.message);
             throw error;
         }
     }
@@ -203,14 +203,14 @@ class FideFinanceAPI {
                 alert('✅ Movimiento eliminado exitosamente');
                 return result;
             } else {
-                alert('❌ Error: ' + (result.error || 'Error al eliminar'));
+                alert('Error: ' + (result.error || 'Error al eliminar'));
                 throw new Error(result.error || 'Error al eliminar movimiento');
             }
         } catch (error) {
             if (error.message === 'Sesión expirada') {
                 return; // Ya se maneja la redirección
             }
-            alert('❌ Error: ' + error.message);
+            alert('Error: ' + error.message);
             throw error;
         }
     }
@@ -519,7 +519,7 @@ window.cerrarSesion = function() {
 function checkAuth() {
     if (!api.isAuthenticated()) {
         console.log('Usuario no autenticado, redirigiendo al login');
-        alert('❌ Debes iniciar sesión para acceder');
+        alert('Debes iniciar sesión para acceder');
         window.location.href = 'user_logIn.html';
         return false;
     }
