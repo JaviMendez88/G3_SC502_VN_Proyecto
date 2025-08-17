@@ -1,4 +1,3 @@
-// settings.js - Configuración completamente corregida
 let currentUser = null;
 let userCategories = [];
 
@@ -40,7 +39,7 @@ async function loadSettings() {
     }
 }
 
-// Cargar categorías - VERSIÓN CORREGIDA
+// Cargar categorías 
 async function loadCategories() {
     try {
         console.log('Cargando categorías desde el servidor...');
@@ -96,7 +95,7 @@ function updateUserInfo() {
     document.getElementById('profileTelefono').value = currentUser.telefono || '';
 }
 
-// Actualizar categorías - VERSIÓN CORREGIDA
+// Actualizar categorías 
 function updateCategories() {
     console.log('=== updateCategories iniciado ===');
     console.log('userCategories disponibles:', userCategories.length);
@@ -149,7 +148,7 @@ function updateCategories() {
     console.log('updateCategories completado');
 }
 
-// Crear elemento de categoría - VERSIÓN MEJORADA
+// Crear elemento de categoría MEJORADA
 function createCategoryItem(category) {
     let iconHtml = '';
     

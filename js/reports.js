@@ -1,4 +1,3 @@
-// reports.js - Gestión de reportes simplificada
 let currentUser = null;
 let allMovements = [];
 let filteredMovements = [];
