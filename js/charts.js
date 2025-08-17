@@ -366,7 +366,7 @@ function prepareMainChartData() {
     }
 }
 
-// NUEVA: Datos mensuales (lógica original)
+//  Datos mensuales (lógica original)
 function prepareMonthlyChartData() {
     const months = getMonthsForPeriod();
     const dataView = document.getElementById('dataView').value;
@@ -433,7 +433,7 @@ function prepareMonthlyChartData() {
     };
 }
 
-// NUEVA: Datos semanales
+//  Datos semanales
 function prepareWeeklyChartData() {
     const weeks = getWeeksForPeriod();
     const dataView = document.getElementById('dataView').value;
@@ -500,7 +500,7 @@ function prepareWeeklyChartData() {
     };
 }
 
-// NUEVA: Datos diarios (últimos 30 días para no saturar)
+//  Datos diarios (últimos 30 días para no saturar)
 function prepareDailyChartData() {
     const days = getDaysForPeriod();
     const dataView = document.getElementById('dataView').value;
@@ -724,7 +724,7 @@ function changeChartView(view) {
     updateMainChart();
 }
 
-// NUEVA: Actualizar título según la vista
+//  Actualizar título según la vista
 function updateChartTitle() {
     const dataView = document.getElementById('dataView')?.value || 'both';
     const viewNames = {
@@ -967,7 +967,7 @@ function renderInsights(insights) {
 
 // === FUNCIONES DE UTILIDAD ADICIONALES ===
 
-// NUEVA: Obtener semanas para el período
+//  Obtener semanas para el período
 function getWeeksForPeriod() {
     const weeks = [];
     const endDate = new Date();
@@ -998,7 +998,7 @@ function getWeeksForPeriod() {
     return weeks.slice(-24); // Máximo 24 semanas
 }
 
-// NUEVA: Obtener días para el período
+//  Obtener días para el período
 function getDaysForPeriod() {
     const days = [];
     const currentDate = new Date();
@@ -1015,7 +1015,7 @@ function getDaysForPeriod() {
     return days;
 }
 
-// NUEVA: Obtener total semanal por tipo
+//  Obtener total semanal por tipo
 function getWeeklyTotal(week, tipo) {
     return allMovements
         .filter(mov => {
@@ -1025,7 +1025,7 @@ function getWeeklyTotal(week, tipo) {
         .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
 }
 
-// NUEVA: Obtener total diario por tipo
+//  Obtener total diario por tipo
 function getDailyTotal(day, tipo) {
     const startOfDay = new Date(day);
     startOfDay.setHours(0, 0, 0, 0);
@@ -1040,10 +1040,6 @@ function getDailyTotal(day, tipo) {
         .reduce((sum, mov) => sum + parseFloat(mov.monto || 0), 0);
 }
 
-// FUNCIÓN OBSOLETA - REEMPLAZADA POR getMonthsForPeriod()
-// function getLast6Months() {
-//     return getMonthsForPeriod();
-// }
 
 // Obtener total mensual por tipo
 function getMonthlyTotal(month, tipo) {
