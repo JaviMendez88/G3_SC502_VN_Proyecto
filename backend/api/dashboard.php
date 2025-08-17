@@ -79,10 +79,27 @@ function getDashboardSummary($userId) {
         $recentMovements = $stmt->fetchAll();
         
         sendResponse([
-            'summary' => $summary,
-            'monthly' => $monthlyData,
-            'recent_movements' => $recentMovements
-        ]);
+    'success' => true,
+    'data' => [
+        'balance' => [
+            'total_ingresos' => floatval($summary['total_ingresos']),
+            'total_gastos' => floatval($summary['total_gastos']),
+            'balance_total' => floatval($summary['balance_total']),
+            'savings_rate' => $summary['total_ingresos'] > 0 ? 
+                round((floatval($summary['balance_total']) / floatval($summary['total_ingresos'])) * 100, 1) : 0
+        ],
+        'recent_movements' => $recentMovements,
+        'current_month_summary' => [
+            'total_movements' => intval($summary['total_movimientos']),
+            'recent_income' => floatval($monthlyData['ingresos_mes']),
+            'recent_expenses' => floatval($monthlyData['gastos_mes']),
+            'daily_average' => floatval($monthlyData['gastos_mes']) / max(1, date('j'))
+        ],
+        'monthly_stats' => [],
+        'categories_stats' => [],
+        'top_categories' => []
+    ]
+]);
         
     } catch (PDOException $e) {
         sendResponse(['error' => 'Error al obtener resumen del dashboard'], 500);

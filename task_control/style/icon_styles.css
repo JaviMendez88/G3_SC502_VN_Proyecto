@@ -1,0 +1,72 @@
+/* Estilos para el selector de iconos */
+.icon-selector-btn {
+    height: 70px !important;
+    transition: all 0.2s ease;
+    border: 2px solid;
+    position: relative;
+}
+
+.icon-selector-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.icon-selector-btn.btn-success,
+.icon-selector-btn.btn-danger {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.icon-selector-btn small {
+    line-height: 1;
+    margin-top: 4px;
+}
+
+#iconGrid {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+#iconGrid::-webkit-scrollbar {
+    width: 8px;
+}
+
+#iconGrid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#iconGrid::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#iconGrid::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+#selectedIconPreview {
+    min-width: 50px;
+    background-color: #f8f9fa;
+    font-size: 1.2rem;
+}
+
+.modal-lg {
+    max-width: 800px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .icon-selector-btn {
+        height: 60px !important;
+    }
+    
+    .icon-selector-btn small {
+        font-size: 0.6rem !important;
+    }
+    
+    #iconGrid {
+        max-height: 300px;
+    }
+}

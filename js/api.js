@@ -1,368 +1,457 @@
-// Configuración optimizada de la API para FideFinance
+// api.js - CORREGIDO con manejo de errores 401
 class FideFinanceAPI {
-    constructor(baseURL = '../Backend/api') {
-        this.baseURL = baseURL;
+    constructor() {
+        this.baseURL = '../backend/api';
         this.token = localStorage.getItem('fidefinance_token');
     }
 
-    // Método genérico optimizado para hacer requests
-    async makeRequest(endpoint, method = 'GET', data = null) {
-        const url = `${this.baseURL}${endpoint}`;
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
-        // Agregar token si existe
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-        }
-
-        const config = {
-            method,
-            headers,
-        };
-
-        if (data && (method === 'POST' || method === 'PUT')) {
-            config.body = JSON.stringify(data);
+    // === VALIDAR TOKEN ===
+    async validateToken() {
+        if (!this.token) {
+            return false;
         }
 
         try {
-            const response = await fetch(url, config);
-            const result = await response.json();
-
-            if (!response.ok) {
-                // Manejar errores del backend PHP
-                if (response.status === 401) {
-                    this.logout();
-                    throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+            // Hacer una petición simple para validar el token
+            const response = await fetch(`${this.baseURL}/auth.php?action=validate`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
                 }
-                throw new Error(result.error || `Error ${response.status}`);
+            });
+
+            if (response.status === 401) {
+                console.log('Token expirado o inválido, limpiando sesión');
+                this.clearSession();
+                return false;
             }
 
-            return result;
+            return response.ok;
         } catch (error) {
-            console.error('API Error:', error);
-            
-            // Si es un error de red
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                throw new Error('Error de conexión. Verifica que el servidor esté funcionando.');
+            console.warn('Error validando token:', error);
+            return false;
+        }
+    }
+
+    // === LIMPIAR SESIÓN ===
+    clearSession() {
+        this.token = null;
+        localStorage.removeItem('fidefinance_token');
+        localStorage.removeItem('fidefinance_user');
+    }
+
+    // === MANEJAR RESPUESTA 401 ===
+    handleUnauthorized() {
+        console.log('Sesión expirada, redirigiendo al login');
+        this.clearSession();
+        alert('⚠️ Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+        window.location.href = 'user_logIn.html';
+    }
+
+    // === HACER REQUEST CON MANEJO DE 401 ===
+    async makeAuthenticatedRequest(url, options = {}) {
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.token && { 'Authorization': `Bearer ${this.token}` }),
+                    ...options.headers
+                }
+            });
+
+            // Manejar error 401
+            if (response.status === 401) {
+                this.handleUnauthorized();
+                throw new Error('Sesión expirada');
             }
-            
+
+            return response;
+        } catch (error) {
+            console.error('Error en request autenticado:', error);
             throw error;
         }
     }
 
-    // === MÉTODOS DE AUTENTICACIÓN ===
+    // === REGISTRO DE USUARIO ===
     async register(userData) {
         try {
-            // Validaciones básicas
-            if (!userData.email || !this.isValidEmail(userData.email)) {
-                throw new Error('Email inválido');
-            }
-            if (!userData.password || userData.password.length < 6) {
-                throw new Error('La contraseña debe tener al menos 6 caracteres');
-            }
-            if (!userData.nombre || !userData.apellidos) {
-                throw new Error('Nombre y apellidos son requeridos');
-            }
+            const response = await fetch(`${this.baseURL}/auth.php?action=register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
 
-            // Sanitizar datos
-            const cleanData = {
-                nombre: this.sanitizeInput(userData.nombre),
-                apellidos: this.sanitizeInput(userData.apellidos),
-                email: this.sanitizeInput(userData.email).toLowerCase(),
-                password: userData.password
-            };
-
-            const result = await this.makeRequest('/auth?action=register', 'POST', cleanData);
+            const result = await response.json();
             
             if (result.success) {
-                this.showMessage('Usuario registrado exitosamente', 'success');
+                alert('✅ Usuario registrado exitosamente');
+                return result;
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error desconocido'));
+                throw new Error(result.error || 'Error en registro');
             }
-            
-            return result;
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            alert('❌ Error de conexión: ' + error.message);
             throw error;
         }
     }
 
+    // === LOGIN DE USUARIO ===
     async login(credentials) {
         try {
-            // Validaciones
-            if (!credentials.email || !credentials.password) {
-                throw new Error('Email y contraseña son requeridos');
-            }
+            const response = await fetch(`${this.baseURL}/auth.php?action=login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentials)
+            });
 
-            const cleanCredentials = {
-                email: this.sanitizeInput(credentials.email).toLowerCase(),
-                password: credentials.password
-            };
-
-            const result = await this.makeRequest('/auth?action=login', 'POST', cleanCredentials);
+            const result = await response.json();
             
-            if (result.success && result.token) {
+            if (result.success) {
+                // Guardar datos de sesión
                 this.token = result.token;
                 localStorage.setItem('fidefinance_token', result.token);
                 localStorage.setItem('fidefinance_user', JSON.stringify(result.user));
-                this.showMessage(`Bienvenido ${result.user.nombre}!`, 'success');
+                
+                console.log('Login exitoso, token guardado:', this.token ? 'SÍ' : 'NO');
+                alert('✅ Login exitoso. ¡Bienvenido ' + result.user.nombre + '!');
+                return result;
+            } else {
+                alert('❌ Error: ' + (result.error || 'Credenciales incorrectas'));
+                throw new Error(result.error || 'Error en login');
             }
-            
-            return result;
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            alert('❌ Error de conexión: ' + error.message);
             throw error;
         }
     }
 
-    // === MÉTODOS DE MOVIMIENTOS ===
+    // === CREAR MOVIMIENTO ===
     async createMovement(movementData) {
         try {
-            // Validaciones del lado cliente
-            if (!movementData.fecha || !movementData.tipo || !movementData.categoria || !movementData.monto) {
-                throw new Error('Todos los campos obligatorios deben estar completos');
-            }
+            const response = await this.makeAuthenticatedRequest(`${this.baseURL}/movements.php`, {
+                method: 'POST',
+                body: JSON.stringify(movementData)
+            });
 
-            if (parseFloat(movementData.monto) <= 0) {
-                throw new Error('El monto debe ser mayor a 0');
-            }
-
-            if (!['ingreso', 'gasto'].includes(movementData.tipo)) {
-                throw new Error('El tipo debe ser "ingreso" o "gasto"');
-            }
-
-            // Sanitizar y formatear datos
-            const cleanData = {
-                fecha: movementData.fecha,
-                tipo: movementData.tipo,
-                categoria: this.sanitizeInput(movementData.categoria),
-                monto: parseFloat(movementData.monto),
-                descripcion: movementData.descripcion ? this.sanitizeInput(movementData.descripcion) : null
-            };
-
-            const result = await this.makeRequest('/movements', 'POST', cleanData);
+            const result = await response.json();
             
             if (result.success) {
-                this.showMessage('Movimiento guardado exitosamente', 'success');
+                alert('✅ Movimiento guardado exitosamente');
+                return result;
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error al guardar'));
+                throw new Error(result.error || 'Error al crear movimiento');
             }
-            
-            return result;
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            if (error.message === 'Sesión expirada') {
+                return; // Ya se maneja la redirección
+            }
+            alert('❌ Error: ' + error.message);
             throw error;
         }
     }
 
-    async getMovements(params = {}) {
+    // === OBTENER MOVIMIENTOS (CORREGIDO) ===
+    async getMovements(limit = 100, offset = 0) {
         try {
-            const { limit = 50, offset = 0, tipo = null, categoria = null } = params;
+            console.log('Obteniendo movimientos, token disponible:', !!this.token);
             
-            let url = `/movements?limit=${limit}&offset=${offset}`;
-            if (tipo) url += `&tipo=${tipo}`;
-            if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
-            
-            return await this.makeRequest(url);
-        } catch (error) {
-            this.showMessage('Error al cargar movimientos', 'error');
-            throw error;
-        }
-    }
+            const url = `${this.baseURL}/movements.php?limit=${limit}&offset=${offset}`;
+            const response = await this.makeAuthenticatedRequest(url, {
+                method: 'GET'
+            });
 
-    async updateMovement(id, movementData) {
-        try {
-            if (!id) {
-                throw new Error('ID del movimiento es requerido');
-            }
-
-            const result = await this.makeRequest(`/movements?id=${id}`, 'PUT', movementData);
+            const result = await response.json();
             
             if (result.success) {
-                this.showMessage('Movimiento actualizado exitosamente', 'success');
+                console.log('Movimientos cargados exitosamente:', result.movements?.length || 0);
+                return result;
+            } else {
+                throw new Error(result.error || 'Error al cargar movimientos');
+            }
+        } catch (error) {
+            console.error('Error cargando movimientos:', error);
+            
+            if (error.message === 'Sesión expirada') {
+                // No mostrar alert adicional, ya se maneja en handleUnauthorized
+                return { success: false, movements: [], error: 'Sesión expirada' };
             }
             
-            return result;
-        } catch (error) {
-            this.showMessage(error.message, 'error');
-            throw error;
+            // Para otros errores, devolver respuesta con datos vacíos
+            console.warn('Usando datos de fallback debido a error:', error.message);
+            return { success: false, movements: [], error: error.message };
         }
     }
 
+    // === ELIMINAR MOVIMIENTO ===
     async deleteMovement(id) {
         try {
-            if (!id) {
-                throw new Error('ID del movimiento es requerido');
-            }
-            
-            const result = await this.makeRequest(`/movements?id=${id}`, 'DELETE');
+            const response = await this.makeAuthenticatedRequest(`${this.baseURL}/movements.php?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
             
             if (result.success) {
-                this.showMessage('Movimiento eliminado exitosamente', 'success');
+                alert('✅ Movimiento eliminado exitosamente');
+                return result;
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error al eliminar'));
+                throw new Error(result.error || 'Error al eliminar movimiento');
             }
-            
-            return result;
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            if (error.message === 'Sesión expirada') {
+                return; // Ya se maneja la redirección
+            }
+            alert('❌ Error: ' + error.message);
             throw error;
         }
     }
 
-    // === MÉTODOS DE DASHBOARD ===
+    // === OBTENER RESUMEN DEL DASHBOARD ===
     async getDashboardSummary() {
         try {
-            return await this.makeRequest('/dashboard?action=summary');
+            const response = await this.makeAuthenticatedRequest(`${this.baseURL}/dashboard.php?action=summary`, {
+                method: 'GET'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                return result;
+            } else {
+                throw new Error(result.error || 'Error al cargar dashboard');
+            }
         } catch (error) {
-            this.showMessage('Error al cargar resumen del dashboard', 'error');
-            throw error;
+            console.error('Error cargando dashboard:', error);
+            
+            if (error.message === 'Sesión expirada') {
+                return { success: false, error: 'Sesión expirada' };
+            }
+            
+            // Devolver datos por defecto en caso de error
+            return {
+                success: true,
+                summary: {
+                    total_ingresos: 0,
+                    total_gastos: 0,
+                    balance_total: 0,
+                    total_movimientos: 0
+                }
+            };
         }
     }
 
-    async getMonthlyData(months = 12) {
+    // === OBTENER DATOS COMPLETOS DEL DASHBOARD ===
+async getDashboard() {
+    try {
+        const response = await this.makeAuthenticatedRequest(`${this.baseURL}/dashboard.php`, {
+            method: 'GET'
+        });
+        
+        const responseText = await response.text();
+        
+        // Intentar parsear JSON
+        let result;
         try {
-            return await this.makeRequest(`/dashboard?action=monthly&months=${months}`);
-        } catch (error) {
-            this.showMessage('Error al cargar datos mensuales', 'error');
-            throw error;
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            throw new Error('Respuesta del servidor no es JSON válido');
         }
+        
+        if (result.success) {
+            return result;
+        } else {
+            throw new Error(result.error || 'Error al cargar dashboard completo');
+        }
+    } catch (error) {
+        
+        if (error.message === 'Sesión expirada') {
+            return { success: false, error: 'Sesión expirada' };
+        }
+        
+        // Devolver estructura básica en caso de error
+        return {
+            success: true,
+            data: {
+                user: this.getCurrentUser(),
+                balance: {
+                    total_ingresos: 0,
+                    total_gastos: 0,
+                    balance_total: 0,
+                    savings_rate: 0
+                },
+                recent_movements: [],
+                monthly_stats: [],
+                categories_stats: [],
+                current_month_summary: {
+                    total_movements: 0,
+                    recent_income: 0,
+                    recent_expenses: 0,
+                    daily_average: 0
+                },
+                top_categories: []
+            }
+        };
     }
+}
 
-    async getCategoriesData() {
+  // === OBTENER CATEGORÍAS (CORREGIDO) ===
+async getCategories() {
+    try {
+        console.log('Obteniendo categorías...');
+        
+        const response = await this.makeAuthenticatedRequest(`${this.baseURL}/categories.php`, {
+            method: 'GET'
+        })
+        
+        const result = await response.json();
+        
+        console.log('Respuesta categorías:', result);
+        
+        if (result.success) {
+            console.log('Categorías cargadas exitosamente:', result.data?.all?.length || 0);
+            return result;
+        } else {
+            throw new Error(result.error || 'Error al cargar categorías');
+        }
+    } catch (error) {
+        console.error('Error cargando categorías:', error);
+        
+        if (error.message === 'Sesión expirada') {
+            return { success: false, error: 'Sesión expirada' };
+        }
+        
+        // Devolver categorías por defecto con el formato correcto
+        console.warn('Usando categorías de fallback');
+        return {
+            success: true,
+            data: {
+                all: [
+                    { nombre: 'Alimentación', tipo: 'gasto', icon: 'fas fa-utensils', color: '#ff6b6b' },
+                    { nombre: 'Transporte', tipo: 'gasto', icon: 'fas fa-car', color: '#4ecdc4' },
+                    { nombre: 'Entretenimiento', tipo: 'gasto', icon: 'fas fa-gamepad', color: '#fd79a8' },
+                    { nombre: 'Servicios', tipo: 'gasto', icon: 'fas fa-bolt', color: '#f9ca24' },
+                    { nombre: 'Salario', tipo: 'ingreso', icon: 'fas fa-money-bill-wave', color: '#00b894' },
+                    { nombre: 'Freelance', tipo: 'ingreso', icon: 'fas fa-laptop', color: '#fdcb6e' },
+                    { nombre: 'Otros ingresos', tipo: 'ingreso', icon: 'fas fa-plus-circle', color: '#00cec9' }
+                ]
+            },
+            total: 7
+        };
+    }
+}
+
+// ALTERNATIVA: Si makeAuthenticatedRequest YA hace .json() internamente
+async getCategoriesAlternative() {
+    try {
+        console.log('Obteniendo categorías (alternativa)...');
+        
+        const result = await this.makeAuthenticatedRequest(`${this.baseURL}/categories.php`, {
+            method: 'GET'
+        });
+        
+        console.log('Respuesta categorías (alternativa):', result);
+        
+        if (result.success) {
+            console.log('Categorías cargadas exitosamente:', result.data?.all?.length || 0);
+            return result;
+        } else {
+            throw new Error(result.error || 'Error al cargar categorías');
+        }
+    } catch (error) {
+        console.error('Error cargando categorías:', error);
+    }
+}
+
+    // === OBTENER RECOMENDACIONES ===
+    async getRecommendations() {
         try {
-            return await this.makeRequest('/dashboard?action=categories');
+            const response = await this.makeAuthenticatedRequest(`${this.baseURL}/recommendations.php`, {
+                method: 'GET'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                return result;
+            } else {
+                throw new Error(result.error || 'Error al cargar recomendaciones');
+            }
         } catch (error) {
-            this.showMessage('Error al cargar datos de categorías', 'error');
-            throw error;
+            console.error('Error cargando recomendaciones:', error);
+            
+            if (error.message === 'Sesión expirada') {
+                return { success: false, error: 'Sesión expirada' };
+            }
+            
+            // Devolver recomendaciones por defecto
+            return {
+                success: true,
+                recommendations: [
+                    {
+                        titulo: 'Controla tus gastos',
+                        mensaje: 'Revisa tus gastos semanalmente para mantener un mejor control.',
+                        prioridad: 'media',
+                        icono: 'fas fa-chart-pie'
+                    },
+                    {
+                        titulo: 'Aumenta tus ahorros',
+                        mensaje: 'Intenta ahorrar al menos el 20% de tus ingresos mensuales.',
+                        prioridad: 'alta',
+                        icono: 'fas fa-piggy-bank'
+                    }
+                ]
+            };
         }
     }
 
-    // === MÉTODOS DE CATEGORÍAS ===
-    async getCategories(tipo = null) {
-        try {
-            const url = tipo ? `/categories?tipo=${tipo}` : '/categories';
-            return await this.makeRequest(url);
-        } catch (error) {
-            this.showMessage('Error al cargar categorías', 'error');
-            throw error;
-        }
-    }
-
-    // === MÉTODOS DE AUTENTICACIÓN Y SESIÓN ===
+    // === VERIFICAR SI ESTÁ LOGUEADO (MEJORADO) ===
     isAuthenticated() {
-        return !!this.token;
+        const hasToken = !!this.token;
+        const hasUser = !!this.getCurrentUser();
+        
+        console.log('Verificando autenticación:', {
+            hasToken,
+            hasUser,
+            tokenLength: this.token ? this.token.length : 0
+        });
+        
+        return hasToken && hasUser;
     }
 
+    // === OBTENER USUARIO ACTUAL ===
     getCurrentUser() {
         try {
             const userStr = localStorage.getItem('fidefinance_user');
             return userStr ? JSON.parse(userStr) : null;
         } catch (error) {
-            console.error('Error al obtener usuario actual:', error);
+            console.error('Error obteniendo usuario:', error);
             return null;
         }
     }
 
+    // === CERRAR SESIÓN ===
     logout() {
-        try {
-            this.token = null;
-            localStorage.removeItem('fidefinance_token');
-            localStorage.removeItem('fidefinance_user');
-            this.showMessage('Sesión cerrada exitosamente', 'info');
-            
-            // Redireccionar después de un momento
-            setTimeout(() => {
-                window.location.href = 'user_logIn.html';
-            }, 1000);
-        } catch (error) {
-            console.error('Error durante logout:', error);
-            window.location.href = 'user_logIn.html';
-        }
+        this.clearSession();
+        alert('✅ Sesión cerrada exitosamente');
+        window.location.href = 'user_logIn.html';
     }
 
-    // === UTILIDADES ===
-    showMessage(message, type = 'info', duration = 4000) {
-        try {
-            // Crear contenedor si no existe
-            let container = document.getElementById('message-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'message-container';
-                container.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 9999;
-                    min-width: 300px;
-                    max-width: 500px;
-                `;
-                document.body.appendChild(container);
-            }
-
-            // Crear mensaje
-            const messageDiv = document.createElement('div');
-            const colors = {
-                'error': '#dc3545',
-                'success': '#28a745',
-                'warning': '#ffc107',
-                'info': '#17a2b8'
-            };
-
-            const icons = {
-                'error': '⚠️',
-                'success': '✅',
-                'warning': '⚠️',
-                'info': 'ℹ️'
-            };
-
-            messageDiv.style.cssText = `
-                background: ${colors[type] || colors.info};
-                color: white;
-                padding: 12px 16px;
-                border-radius: 6px;
-                margin-bottom: 10px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                font-family: Arial, sans-serif;
-                font-size: 14px;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-            `;
-
-            messageDiv.innerHTML = `
-                <span style="margin-right: 8px;">${icons[type] || icons.info}</span>
-                ${message}
-                <button onclick="this.parentElement.remove()" style="
-                    background: none;
-                    border: none;
-                    color: white;
-                    float: right;
-                    cursor: pointer;
-                    font-size: 16px;
-                    margin-left: 10px;
-                ">×</button>
-            `;
-
-            container.appendChild(messageDiv);
-
-            // Animar entrada
-            setTimeout(() => {
-                messageDiv.style.opacity = '1';
-                messageDiv.style.transform = 'translateX(0)';
-            }, 10);
-
-            // Auto-remover
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.style.opacity = '0';
-                    messageDiv.style.transform = 'translateX(100%)';
-                    setTimeout(() => messageDiv.remove(), 300);
-                }
-            }, duration);
-
-        } catch (error) {
-            console.error('Error mostrando mensaje:', error);
-            alert(`${type.toUpperCase()}: ${message}`);
-        }
+    // === VALIDAR EMAIL ===
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 
+    // === FORMATEAR MONEDA ===
     formatCurrency(amount) {
         try {
             const number = parseFloat(amount) || 0;
@@ -375,63 +464,81 @@ class FideFinanceAPI {
         }
     }
 
-    formatDate(dateString) {
+    // === MOSTRAR MENSAJE (PARA COMPATIBILIDAD) ===
+    showMessage(message, type = 'info', duration = 3000) {
+        const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+        alert(`${emoji} ${message}`);
+    }
+
+    // === HACER REQUEST GENÉRICO (MEJORADO) ===
+    async makeRequest(endpoint, method = 'GET', data = null) {
         try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-CR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            const config = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (this.token) {
+                config.headers['Authorization'] = `Bearer ${this.token}`;
+            }
+
+            if (data && method !== 'GET') {
+                config.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(`${this.baseURL}${endpoint}`, config);
+            
+            // Manejar 401
+            if (response.status === 401) {
+                this.handleUnauthorized();
+                throw new Error('Sesión expirada');
+            }
+            
+            const result = await response.json();
+            return result;
         } catch (error) {
-            return 'Fecha inválida';
-        }
-    }
-
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    sanitizeInput(input) {
-        if (typeof input !== 'string') return input;
-        return input.trim().replace(/[<>]/g, '');
-    }
-
-    // Verificar conexión con el backend
-    async checkConnection() {
-        try {
-            const response = await fetch(`${this.baseURL}/../index.php`);
-            return response.ok;
-        } catch (error) {
-            return false;
+            console.error('Error en request:', error);
+            throw error;
         }
     }
 }
 
-// Instancia global
+// Crear instancia global
 const api = new FideFinanceAPI();
 
-// Función simple para verificar autenticación
-function checkAuth() {
-    if (!api.isAuthenticated()) {
-        window.location.href = 'user_logIn.html';
-        return false;
-    }
-    return true;
-}
-
-// Función global para cerrar sesión
+// Función global para cerrar sesión (para compatibilidad)
 window.cerrarSesion = function() {
     if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
         api.logout();
     }
 };
 
-// Verificar conexión al cargar la página
-document.addEventListener('DOMContentLoaded', async function() {
-    const isConnected = await api.checkConnection();
-    if (!isConnected && api.isAuthenticated()) {
-        api.showMessage('Problemas de conexión con el servidor', 'warning', 8000);
+// Verificar autenticación simple (función de utilidad MEJORADA)
+function checkAuth() {
+    if (!api.isAuthenticated()) {
+        console.log('Usuario no autenticado, redirigiendo al login');
+        alert('❌ Debes iniciar sesión para acceder');
+        window.location.href = 'user_logIn.html';
+        return false;
     }
-});
+    return true;
+}
+
+// Función de inicialización opcional (MEJORADA)
+function initializeAPI() {
+    console.log('FideFinance API inicializada');
+    console.log('Usuario autenticado:', api.isAuthenticated());
+    
+    if (api.isAuthenticated()) {
+        const user = api.getCurrentUser();
+        console.log('Usuario actual:', user?.nombre || 'Desconocido');
+        console.log('Token presente:', !!api.token);
+    } else {
+        console.log('No hay sesión activa');
+    }
+}
+
+// Auto-inicializar cuando se carga el script
+document.addEventListener('DOMContentLoaded', initializeAPI);

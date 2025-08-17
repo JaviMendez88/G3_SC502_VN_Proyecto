@@ -1,218 +1,252 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FideFinance - Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FideFinance - Gestión Financiera Simple</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="style/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
 </head>
+<body class="bg-light">
 
-<body>
-
-    <div class="container-fluid">
-        <div class="row min-vh-100">
-            <!-- Inicio Sidebar al lado izquierdo -->
-            <aside class="col-md-2 bg-dark text-white p-4">
-                <img src="images/FideFinance_Logo.png" alt="FideFinanceLogo" class="logo mb-3">
-                <h4 class="mb-4">Menú FideFinance</h4>
-                <ul class="nav flex-column">
-                    <li class="nav-item"><a class="nav-link text-white" href="#acerca">Acerca de Nosotros</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#" data-bs-toggle="modal"
-                            data-bs-target="#modalContacto">Soporte</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#caracteristicas">Características</a></li>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-chart-line me-2 text-warning"></i>
+                FideFinance
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#funciones">Funciones</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#estadisticas">Estadísticas</a>
+                    </li>
                 </ul>
-            </aside>
+                
+                <div class="d-flex gap-2" id="navActions">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </nav>
 
-            <!-- Fin Sidebar al lado izquierdo -->
-            <main class="col-md-10 p-4">
-                <!-- Botones dinámicos en la parte superior -->
-                <div class="d-flex justify-content-end align-items-center mb-3 gap-2" id="topButtons">
-                    <!-- Los botones se cargarán dinámicamente aquí -->
-                    <div class="spinner-border spinner-border-sm text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
+    <!-- Hero Section -->
+    <section id="inicio" class="bg-white py-5">
+        <div class="container">
+            <div class="row align-items-center min-vh-75">
+                <div class="col-lg-6">
+                    <div class="py-5">
+                        <h1 class="display-4 fw-bold text-dark mb-4">
+                            Controla tus <span class="text-warning">Finanzas</span> de forma simple
+                        </h1>
+                        <p class="lead text-muted mb-4">
+                            La herramienta más sencilla para gestionar tus ingresos, gastos y metas financieras. 
+                            Sin complicaciones, solo resultados.
+                        </p>
+                        <div id="heroButtons" class="d-flex gap-3 flex-wrap">
+                            <!-- Botones dinámicos -->
+                        </div>
                     </div>
                 </div>
-
-                <!-- Sección Hero con video -->
-                <section id="acerca" class="about-us-section position-relative mb-5">
-                    <video autoplay muted loop playsinline class="background-video">
-                        <source src="videos/moneyzoomout.mp4" type="video/mp4">
-                    </video>
-                    <div
-                        class="overlay-text text-white text-center d-flex flex-column justify-content-center align-items-center">
-                        <h1 class="display-4 fw-bold mb-4">FideFinance</h1>
-                        <h2 class="display-6 fw-bold">Tu Aliado en Finanzas Personales</h2>
-                        <p class="w-75 fs-5 mb-4">La solución completa para gestionar, planificar y optimizar tus
-                            finanzas personales con inteligencia artificial.</p>
-                        <div id="heroActions">
-                            <!-- Acciones se cargarán dinámicamente -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Características principales -->
-                <section id="caracteristicas" class="mb-5">
-                    <div class="container">
-                        <h2 class="text-center mb-5">¿Por qué elegir FideFinance?</h2>
-                        <div class="row">
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 text-center border-primary">
-                                    <div class="card-body">
-                                        <i class="fas fa-chart-line text-primary mb-3" style="font-size: 3rem;"></i>
-                                        <h5 class="card-title">Análisis Inteligente</h5>
-                                        <p class="card-text">Recibe recomendaciones personalizadas basadas en tus
-                                            patrones de gasto y objetivos financieros.</p>
+                
+                <div class="col-lg-6">
+                    <div class="text-center">
+                        <div class="bg-dark rounded-3 p-4 shadow">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-tachometer-alt text-warning me-2"></i>
+                                <span class="text-white fw-bold">Tu Dashboard</span>
+                            </div>
+                            
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="bg-success rounded p-3 text-white text-center">
+                                        <div class="h5 mb-1">₡850K</div>
+                                        <small>Ingresos</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-danger rounded p-3 text-white text-center">
+                                        <div class="h5 mb-1">₡650K</div>
+                                        <small>Gastos</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 text-center border-success">
-                                    <div class="card-body">
-                                        <i class="fas fa-shield-alt text-success mb-3" style="font-size: 3rem;"></i>
-                                        <h5 class="card-title">Seguridad Total</h5>
-                                        <p class="card-text">Tus datos están protegidos con encriptación de última
-                                            generación y autenticación segura.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 text-center border-info">
-                                    <div class="card-body">
-                                        <i class="fas fa-mobile-alt text-info mb-3" style="font-size: 3rem;"></i>
-                                        <h5 class="card-title">Acceso Universal</h5>
-                                        <p class="card-text">Gestiona tus finanzas desde cualquier dispositivo, en
-                                            cualquier momento y lugar.</p>
-                                    </div>
+                            
+                            <div class="bg-warning rounded p-3 text-dark">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Balance:</span>
+                                    <span class="h5 mb-0">₡200K</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Estadísticas dinámicas (solo si hay usuarios) -->
-                <section id="estadisticas" class="mb-5" style="display: none;">
-                    <div class="container">
-                        <h2 class="text-center mb-5">FideFinance en Números</h2>
-                        <div class="row text-center">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body">
-                                        <h3 id="totalUsuarios">-</h3>
-                                        <p>Usuarios Activos</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h3 id="totalMovimientos">-</h3>
-                                        <p>Transacciones Registradas</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body">
-                                        <h3 id="ahorroPromedio">-</h3>
-                                        <p>Ahorro Promedio</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body">
-                                        <h3 id="satisfaccion">98%</h3>
-                                        <p>Satisfacción</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Footer -->
-                <footer class="text-center mt-5 pt-4 border-top">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-info-circle me-1"></i>Acerca de</h6>
-                            <p class="small text-muted">FideFinance es tu plataforma de confianza para la gestión
-                                inteligente de finanzas personales.</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-link me-1"></i>Enlaces Útiles</h6>
-                            <div class="d-flex flex-column">
-                                <a href="#" class="text-decoration-none small" data-bs-toggle="modal"
-                                    data-bs-target="#modalContacto">Soporte</a>
-                                <a href="#" class="text-decoration-none small">Política de Privacidad</a>
-                                <a href="#" class="text-decoration-none small">Términos de Uso</a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-graduation-cap me-1"></i>Desarrollado por</h6>
-                            <p class="small text-muted">Grupo 3 - Curso SC502<br>Ambiente Web Cliente/Servidor</p>
-                        </div>
-                    </div>
-                    <hr>
-                    <p class="small text-muted">© 2025 FideFinance. Todos los derechos reservados.</p>
-                </footer>
-            </main>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Modal de Contacto -->
-    <div class="modal fade" id="modalContacto" tabindex="-1" aria-labelledby="modalContactoLabel" aria-hidden="true">
+    <!-- Functions Section -->
+    <section id="funciones" class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h1 fw-bold text-dark mb-3">¿Qué puedes hacer?</h2>
+                <p class="lead text-muted">Herramientas simples para gestionar mejor tu dinero</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center h-100">
+                        <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-plus text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <h4 class="text-dark">Registrar Movimientos</h4>
+                        <p class="text-muted">Agrega tus ingresos y gastos de forma rápida y sencilla</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center h-100">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-chart-bar text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <h4 class="text-dark">Ver Reportes</h4>
+                        <p class="text-muted">Analiza tus patrones de gasto con gráficos claros</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center h-100">
+                        <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-target text-dark" style="font-size: 2rem;"></i>
+                        </div>
+                        <h4 class="text-dark">Planificar Metas</h4>
+                        <p class="text-muted">Establece objetivos de ahorro y da seguimiento a tu progreso</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="estadisticas" class="py-5 bg-dark text-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h1 fw-bold mb-3">FideFinance en números</h2>
+                <p class="lead text-light">Miles de usuarios ya confían en nosotros</p>
+            </div>
+            
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="h2 fw-bold text-warning" data-target="1250">0</div>
+                    <p class="text-light">Usuarios Activos</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="h2 fw-bold text-warning" data-target="25" data-suffix="M">0M</div>
+                    <p class="text-light">Dinero Gestionado</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="h2 fw-bold text-warning" data-target="8500">0</div>
+                    <p class="text-light">Transacciones</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="h2 fw-bold text-warning" data-target="95" data-suffix="%">0%</div>
+                    <p class="text-light">Satisfacción</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 bg-warning">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h2 class="h1 fw-bold text-dark mb-2">¿Listo para empezar?</h2>
+                    <p class="lead text-dark mb-0">Toma control de tus finanzas hoy mismo</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div id="ctaButtons" class="d-flex gap-3 justify-content-lg-end">
+                        <!-- Botones dinámicos -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-chart-line text-warning me-2"></i>
+                        <span class="fw-bold">FideFinance</span>
+                    </div>
+                    <small class="text-light">Gestión financiera simple y efectiva</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-light">© 2025 Grupo 3 - SC502</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Contact Modal -->
+    <div class="modal fade" id="contactModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="modalContactoLabel">
-                        <i class="fas fa-envelope me-2"></i>Contáctenos
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-envelope me-2"></i>Contacto
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+                
                 <div class="modal-body">
-                    <form id="formularioContacto">
+                    <form id="contactForm">
                         <div class="mb-3">
-                            <label for="correoContacto" class="form-label">
-                                <i class="fas fa-envelope me-1"></i>Correo electrónico *
-                            </label>
-                            <input type="email" class="form-control" id="correoContacto" name="correoContacto"
-                                placeholder="usuario@correo.com" required>
+                            <label for="contactName" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="contactName" required>
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="telefonoContacto" class="form-label">
-                                <i class="fas fa-phone me-1"></i>Teléfono
-                            </label>
-                            <input type="tel" class="form-control" id="telefonoContacto" name="telefonoContacto"
-                                placeholder="+506 8888-8888">
+                            <label for="contactEmail" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="contactEmail" required>
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="asuntoContacto" class="form-label">
-                                <i class="fas fa-tag me-1"></i>Asunto *
-                            </label>
-                            <select class="form-select" id="asuntoContacto" name="asuntoContacto" required>
-                                <option value="">Selecciona un tema</option>
-                                <option value="soporte">Soporte Técnico</option>
-                                <option value="consulta">Consulta General</option>
-                                <option value="sugerencia">Sugerencia</option>
-                                <option value="problema">Reportar Problema</option>
-                                <option value="otro">Otro</option>
+                            <label for="contactSubject" class="form-label">Tema *</label>
+                            <select class="form-select" id="contactSubject" required>
+                                <option value="">Seleccionar tema</option>
+                                <option value="support">Soporte</option>
+                                <option value="sales">Consulta</option>
+                                <option value="feedback">Sugerencia</option>
+                                <option value="other">Otro</option>
                             </select>
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="mensajeContacto" class="form-label">
-                                <i class="fas fa-comment me-1"></i>Mensaje *
-                            </label>
-                            <textarea class="form-control" id="mensajeContacto" name="mensajeContacto" rows="4"
-                                placeholder="Describa su consulta o problema..." required></textarea>
+                            <label for="contactMessage" class="form-label">Mensaje *</label>
+                            <textarea class="form-control" id="contactMessage" rows="3" required></textarea>
                         </div>
+                        
                         <div class="text-end">
-                            <button type="button" class="btn btn-secondary me-2"
-                                data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-success">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-dark">
                                 <i class="fas fa-paper-plane me-1"></i>Enviar
                             </button>
                         </div>
@@ -222,13 +256,9 @@
         </div>
     </div>
 
-    <!-- Message container for notifications -->
-    <div id="message-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;"></div>
-
-    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/home.js"></script>
 
 </body>
-
 </html>

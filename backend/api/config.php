@@ -1,11 +1,15 @@
 <?php
-// config.php - Configuración de la base de datos
+// config.php - Configuración global
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Configuración de base de datos
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'fidefinance');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
-// Configuración CORS para permitir requests del frontend
+// Establecer headers CORS y JSON
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -25,34 +29,44 @@ function getDB() {
             DB_PASS,
             [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
             ]
         );
         return $pdo;
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Error de conexión a la base de datos']);
-        exit;
+        error_log("Error de conexión DB: " . $e->getMessage());
+        sendResponse(['error' => 'Error de conexión a la base de datos'], 500);
     }
 }
 
 // Función para enviar respuesta JSON
 function sendResponse($data, $code = 200) {
     http_response_code($code);
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Función para validar JWT simple (opcional)
+// Función para validar token
 function validateToken($token = null) {
-    // Por simplicidad, solo verificamos que el token exista
-    // En producción deberías usar JWT real
-    if (!$token && isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        $token = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']);
+    // Si no se pasa token, intentar obtenerlo del header
+    if (!$token) {
+        $headers = apache_request_headers();
+        $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        
+        if (!empty($authHeader) && strpos($authHeader, 'Bearer ') === 0) {
+            $token = substr($authHeader, 7);
+        }
     }
     
+    // Si aún no hay token, retornar error
     if (!$token) {
         sendResponse(['error' => 'Token requerido'], 401);
+    }
+    
+    // Validar que el token no esté vacío
+    if (empty(trim($token))) {
+        sendResponse(['error' => 'Token vacío'], 401);
     }
     
     return $token;

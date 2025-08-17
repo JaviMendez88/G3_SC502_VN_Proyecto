@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FideFinance - Estadísticas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-light">
+
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+            <!-- Sidebar -->
+            <aside class="col-md-2 bg-dark text-white p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                    <h5 class="mb-0">FideFinance</h5>
+                    <small class="text-muted">Dashboard</small>
+                </div>
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a id="nav-dashboard" class="nav-link text-white rounded" href="userProfile_dashboard.html"
+                            onclick="handleNavClick(event)">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-settings" class="nav-link text-white rounded" href="userProfile_settings.html"
+                            onclick="handleNavClick(event)">
+                            <i class="fas fa-cog me-2"></i>Configuración
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-reports" class="nav-link text-white rounded" href="userProfile_reports.html"
+                            onclick="handleNavClick(event)">
+                            <i class="fas fa-file-alt me-2"></i>Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-charts" class="nav-link text-white rounded" href="userProfile_charts.html"
+                            onclick="handleNavClick(event)">
+                            <i class="fas fa-chart-bar me-2"></i>Gráficas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-statistics" class="nav-link text-white rounded" href="userProfile_statistics.html"
+                            onclick="handleNavClick(event)">
+                            <i class="fas fa-calculator me-2"></i>Estadísticas
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="mt-auto pt-4">
+                    <button onclick="cerrarSesion()" class="btn btn-outline-danger w-100">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="col-md-10 p-4">
+                <!-- Loading -->
+                <div id="loadingIndicator" class="text-center py-5">
+                    <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h4 class="mt-3 text-muted">Calculando estadísticas...</h4>
+                </div>
+
+                <!-- Content -->
+                <div id="statisticsContent" style="display: none;">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="mb-0 text-dark">
+                                <i class="fas fa-calculator text-warning me-2"></i>
+                                Estadísticas Avanzadas
+                            </h2>
+                            <p class="text-muted mb-0">Análisis estadístico profundo de tus finanzas</p>
+                        </div>
+                        <div class="d-flex align-items-center bg-white rounded-3 p-3 shadow-sm">
+                            <i class="fas fa-database text-warning me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <small class="text-muted d-block">Datos analizados</small>
+                                <span id="totalDataPoints" class="fw-bold text-dark">0 movimientos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros de Periodo -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-filter text-warning me-2"></i>Configuración de Análisis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="statsPeriod" class="form-label">Periodo de Análisis</label>
+                                    <select class="form-select" id="statsPeriod" onchange="calculateStatistics()">
+                                        <option value="3">Últimos 3 meses</option>
+                                        <option value="6" selected>Últimos 6 meses</option>
+                                        <option value="12">Último año</option>
+                                        <option value="all">Todos los datos</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="statsCategory" class="form-label">Categoría</label>
+                                    <select class="form-select" id="statsCategory" onchange="calculateStatistics()">
+                                        <option value="">Todas las categorías</option>
+                                        <!-- Se llenan dinámicamente -->
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="statsType" class="form-label">Tipo de Movimiento</label>
+                                    <select class="form-select" id="statsType" onchange="calculateStatistics()">
+                                        <option value="">Todos los tipos</option>
+                                        <option value="ingreso">💰 Solo Ingresos</option>
+                                        <option value="gasto">💸 Solo Gastos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <button class="btn btn-outline-success me-2" onclick="exportStatistics()">
+                                    <i class="fas fa-download me-1"></i>Exportar Estadísticas
+                                </button>
+                                <button class="btn btn-warning" onclick="calculateStatistics()">
+                                    <i class="fas fa-calculator me-1"></i>Recalcular
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas Principales -->
+                    <div class="row mb-4">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                    <h4 id="avgMonthly" class="text-primary mb-1">₡0</h4>
+                                    <small class="text-muted">Promedio Mensual</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-bar fa-3x text-success mb-3"></i>
+                                    <h4 id="median" class="text-success mb-1">₡0</h4>
+                                    <small class="text-muted">Mediana</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-area fa-3x text-warning mb-3"></i>
+                                    <h4 id="standardDeviation" class="text-warning mb-1">₡0</h4>
+                                    <small class="text-muted">Desviación Estándar</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-percentage fa-3x text-danger mb-3"></i>
+                                    <h4 id="variationCoeff" class="text-danger mb-1">0%</h4>
+                                    <small class="text-muted">Coef. Variación</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Análisis Detallado -->
+                    <div class="row mb-4">
+                        <!-- Distribución de Datos -->
+                        <div class="col-lg-8 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-chart-histogram text-warning me-2"></i>Distribución de
+                                        Movimientos
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Rango</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Porcentaje</th>
+                                                    <th>Acumulado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="distributionTable">
+                                                <!-- Se llena dinámicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Métricas Estadísticas -->
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list-ol text-warning me-2"></i>Métricas Detalladas
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Mínimo:</span>
+                                            <span id="minValue" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Máximo:</span>
+                                            <span id="maxValue" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Rango:</span>
+                                            <span id="range" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Q1 (25%):</span>
+                                            <span id="q1" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Q3 (75%):</span>
+                                            <span id="q3" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">IQR:</span>
+                                            <span id="iqr" class="fw-bold">₡0</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Asimetría:</span>
+                                            <span id="skewness" class="fw-bold">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Curtosis:</span>
+                                            <span id="kurtosis" class="fw-bold">0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Análisis por Categorías -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-tags text-warning me-2"></i>Análisis por Categorías
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Categoría</th>
+                                                    <th>Movimientos</th>
+                                                    <th>Total</th>
+                                                    <th>Promedio</th>
+                                                    <th>% del Total</th>
+                                                    <th>Frecuencia</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="categoryStatsTable">
+                                                <!-- Se llena dinámicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Análisis Temporal -->
+                    <div class="row mb-4">
+                        <!-- Tendencias por Día -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-calendar-day text-warning me-2"></i>Análisis por Día de la
+                                        Semana
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="weekdayStats">
+                                        <!-- Se llena dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tendencias por Mes -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-calendar-alt text-warning me-2"></i>Análisis por Mes del Año
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="monthlyStats">
+                                        <!-- Se llena dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Predicciones y Proyecciones -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-crystal-ball text-warning me-2"></i>Proyecciones Estadísticas
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <h6 class="text-primary mb-2">Próximo Mes</h6>
+                                                <div id="nextMonthPrediction" class="h5 mb-1">₡0</div>
+                                                <small class="text-muted">Gasto Estimado</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <h6 class="text-success mb-2">Tendencia</h6>
+                                                <div id="trend" class="h5 mb-1">📈</div>
+                                                <small class="text-muted">Dirección</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <h6 class="text-warning mb-2">Estacionalidad</h6>
+                                                <div id="seasonality" class="h5 mb-1">Normal</div>
+                                                <small class="text-muted">Patrón</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <h6 class="text-danger mb-2">Volatilidad</h6>
+                                                <div id="volatility" class="h5 mb-1">Baja</div>
+                                                <small class="text-muted">Nivel</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/statistics.js"></script>
+    <script src="../js/sidebar.js"></script>
+
+</body>
+
+</html>

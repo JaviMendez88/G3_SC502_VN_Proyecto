@@ -2,49 +2,58 @@
 // movements.php - Manejo de movimientos financieros
 require_once 'config.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
-
-// Validar token para todas las operaciones
-$token = validateToken();
-$userId = getUserIdFromToken($token);
-
-switch($method) {
-    case 'GET':
-        getMovements($userId);
-        break;
-        
-    case 'POST':
-        createMovement($userId, $input);
-        break;
-        
-    case 'PUT':
-        $movementId = $_GET['id'] ?? null;
-        updateMovement($userId, $movementId, $input);
-        break;
-        
-    case 'DELETE':
-        $movementId = $_GET['id'] ?? null;
-        deleteMovement($userId, $movementId);
-        break;
-        
-    default:
-        sendResponse(['error' => 'Método no permitido'], 405);
-}
-
+// Función para obtener user ID desde token
 function getUserIdFromToken($token) {
-    // Decodificar token simple
+    // Decodificar token simple (ajusta según tu implementación)
     $decoded = base64_decode($token);
     $parts = explode(':', $decoded);
     return intval($parts[0]);
+}
+
+// Obtener método HTTP
+$method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents('php://input'), true);
+
+try {
+    // Validar token para todas las operaciones
+    $token = validateToken();
+    $userId = getUserIdFromToken($token);
+
+    // Router principal
+    switch($method) {
+        case 'GET':
+            getMovements($userId);
+            break;
+            
+        case 'POST':
+            createMovement($userId, $input);
+            break;
+            
+        case 'PUT':
+            $movementId = $_GET['id'] ?? null;
+            updateMovement($userId, $movementId, $input);
+            break;
+            
+        case 'DELETE':
+            $movementId = $_GET['id'] ?? null;
+            deleteMovement($userId, $movementId);
+            break;
+            
+        default:
+            sendResponse(['error' => 'Método no permitido'], 405);
+    }
+
+} catch (Exception $e) {
+    error_log("Error en movements.php: " . $e->getMessage());
+    sendResponse(['error' => 'Error interno del servidor'], 500);
 }
 
 function getMovements($userId) {
     $db = getDB();
     
     try {
-        $limit = $_GET['limit'] ?? 50;
-        $offset = $_GET['offset'] ?? 0;
+        $limit = intval($_GET['limit'] ?? 50);
+        $offset = intval($_GET['offset'] ?? 0);
         $tipo = $_GET['tipo'] ?? null;
         $categoria = $_GET['categoria'] ?? null;
         
@@ -61,6 +70,7 @@ function getMovements($userId) {
             $params[] = $categoria;
         }
         
+        // Query principal
         $stmt = $db->prepare("
             SELECT * FROM movements 
             $where 
@@ -68,25 +78,27 @@ function getMovements($userId) {
             LIMIT ? OFFSET ?
         ");
         
-        $params[] = intval($limit);
-        $params[] = intval($offset);
+        $params[] = $limit;
+        $params[] = $offset;
         
         $stmt->execute($params);
         $movements = $stmt->fetchAll();
         
-        // Obtener total de registros para paginación
+        // Obtener total para paginación
         $countStmt = $db->prepare("SELECT COUNT(*) as total FROM movements $where");
         $countStmt->execute(array_slice($params, 0, -2));
         $total = $countStmt->fetch()['total'];
         
         sendResponse([
+            'success' => true,
             'movements' => $movements,
-            'total' => $total,
-            'limit' => intval($limit),
-            'offset' => intval($offset)
+            'total' => intval($total),
+            'limit' => $limit,
+            'offset' => $offset
         ]);
         
     } catch (PDOException $e) {
+        error_log("Error getMovements: " . $e->getMessage());
         sendResponse(['error' => 'Error al obtener movimientos'], 500);
     }
 }
@@ -129,6 +141,7 @@ function createMovement($userId, $data) {
         ]);
         
     } catch (PDOException $e) {
+        error_log("Error createMovement: " . $e->getMessage());
         sendResponse(['error' => 'Error al crear movimiento'], 500);
     }
 }
@@ -171,6 +184,7 @@ function updateMovement($userId, $movementId, $data) {
         ]);
         
     } catch (PDOException $e) {
+        error_log("Error updateMovement: " . $e->getMessage());
         sendResponse(['error' => 'Error al actualizar movimiento'], 500);
     }
 }
@@ -196,6 +210,7 @@ function deleteMovement($userId, $movementId) {
         ]);
         
     } catch (PDOException $e) {
+        error_log("Error deleteMovement: " . $e->getMessage());
         sendResponse(['error' => 'Error al eliminar movimiento'], 500);
     }
 }
