@@ -1,10 +1,8 @@
 <?php
-// movements.php - Manejo de movimientos financieros
 require_once 'config.php';
 
 // Función para obtener user ID desde token
 function getUserIdFromToken($token) {
-    // Decodificar token simple (ajusta según tu implementación)
     $decoded = base64_decode($token);
     $parts = explode(':', $decoded);
     return intval($parts[0]);

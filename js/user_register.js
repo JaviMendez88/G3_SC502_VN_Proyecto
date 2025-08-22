@@ -1,4 +1,3 @@
-// user_register.js - SÚPER SIMPLIFICADO
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar si ya está logueado
     if (api.isAuthenticated()) {
@@ -130,12 +129,3 @@ function togglePasswordVisibility(fieldId, button) {
     }
 }
 
-// Función demo para llenar datos (OPCIONAL)
-function fillDemoData() {
-    document.getElementById('nombre').value = 'Juan';
-    document.getElementById('apellidos').value = 'Pérez González';
-    document.getElementById('email').value = 'juan.perez@ejemplo.com';
-    document.getElementById('password').value = 'demo123';
-    document.getElementById('confirm').value = 'demo123';
-    alert('Datos demo cargados. Revisa y presiona "Registrar"');
-}

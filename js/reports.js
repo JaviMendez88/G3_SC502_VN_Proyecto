@@ -398,7 +398,7 @@ function exportReport() {
         link.click();
         document.body.removeChild(link);
         
-        alert('✅ Reporte exportado exitosamente');
+        alert('Reporte exportado exitosamente');
         
     } catch (error) {
         console.error('Error exportando reporte:', error);

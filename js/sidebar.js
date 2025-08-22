@@ -1,4 +1,3 @@
-// sidebar.js - Manejo de navegación activa
 document.addEventListener('DOMContentLoaded', function() {
     setActiveNavigation();
 });

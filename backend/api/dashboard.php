@@ -1,5 +1,4 @@
 <?php
-// dashboard.php - Datos para el dashboard
 require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];

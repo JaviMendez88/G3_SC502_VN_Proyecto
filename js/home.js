@@ -1,4 +1,3 @@
-// home.js - SÚPER SIMPLIFICADO
 document.addEventListener('DOMContentLoaded', function() {
     initializeHome();
 });
@@ -117,7 +116,7 @@ async function handleContactSubmit(event) {
         // Simular envío (aquí irían a tu backend)
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        alert('✅ ¡Mensaje enviado exitosamente! Te contactaremos pronto.');
+        alert('¡Mensaje enviado exitosamente! Te contactaremos pronto.');
         
         // Cerrar modal y limpiar formulario
         const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));

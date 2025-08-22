@@ -1,5 +1,4 @@
 <?php
-// auth.php - Manejo de autenticación
 require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -83,7 +82,7 @@ function login($data) {
             sendResponse(['error' => 'Credenciales incorrectas'], 401);
         }
         
-        // Token simple (en producción usar JWT)
+        // Token simple 
         $token = base64_encode($user['id'] . ':' . time());
         
         sendResponse([

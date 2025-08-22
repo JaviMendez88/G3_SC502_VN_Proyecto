@@ -56,7 +56,7 @@ async function loadMovements() {
     }
 }
 
-// : Cambiar período (MEJORADA)
+// Cambiar período
 function changePeriod() {
     const periodSelector = document.getElementById('chartPeriod');
     if (periodSelector) {
@@ -365,7 +365,7 @@ function prepareMainChartData() {
     }
 }
 
-//  Datos mensuales (lógica original)
+//  Datos mensuales
 function prepareMonthlyChartData() {
     const months = getMonthsForPeriod();
     const dataView = document.getElementById('dataView').value;
@@ -499,7 +499,7 @@ function prepareWeeklyChartData() {
     };
 }
 
-//  Datos diarios (últimos 30 días para no saturar)
+//  Datos diarios 
 function prepareDailyChartData() {
     const days = getDaysForPeriod();
     const dataView = document.getElementById('dataView').value;
@@ -631,7 +631,7 @@ function prepareBalanceData() {
 
 // Preparar datos de comparación 
 function prepareComparisonData() {
-    const months = getMonthsForPeriod(); // Usar 
+    const months = getMonthsForPeriod(); 
     
     const incomeData = months.map(month => getMonthlyTotal(month, 'ingreso'));
     const expenseData = months.map(month => getMonthlyTotal(month, 'gasto'));
@@ -1096,7 +1096,7 @@ function exportChart() {
     }
 }
 
-// Generar datos de ejemplo (MEJORADA)
+// Generar datos de ejemplo 
 function generateSampleData() {
     const movements = [];
     const categories = ['Alimentación', 'Transporte', 'Entretenimiento', 'Servicios', 'Salario', 'Freelance'];

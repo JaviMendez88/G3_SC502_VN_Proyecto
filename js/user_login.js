@@ -1,4 +1,3 @@
-// user_login.js - SÚPER SIMPLIFICADO
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar si ya está logueado
     if (api.isAuthenticated()) {

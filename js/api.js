@@ -1,4 +1,3 @@
-// api.js - CORREGIDO con manejo de errores 401
 class FideFinanceAPI {
     constructor() {
         this.baseURL = '../backend/api';
@@ -45,7 +44,7 @@ class FideFinanceAPI {
     handleUnauthorized() {
         console.log('Sesión expirada, redirigiendo al login');
         this.clearSession();
-        alert('⚠️ Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+        alert('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
         window.location.href = 'user_logIn.html';
     }
 
@@ -88,7 +87,7 @@ class FideFinanceAPI {
             const result = await response.json();
             
             if (result.success) {
-                alert('✅ Usuario registrado exitosamente');
+                alert('Usuario registrado exitosamente');
                 return result;
             } else {
                 alert('Error: ' + (result.error || 'Error desconocido'));
@@ -120,7 +119,7 @@ class FideFinanceAPI {
                 localStorage.setItem('fidefinance_user', JSON.stringify(result.user));
                 
                 console.log('Login exitoso, token guardado:', this.token ? 'SÍ' : 'NO');
-                alert('✅ Login exitoso. ¡Bienvenido ' + result.user.nombre + '!');
+                alert('Login exitoso. ¡Bienvenido ' + result.user.nombre + '!');
                 return result;
             } else {
                 alert('Error: ' + (result.error || 'Credenciales incorrectas'));
@@ -143,7 +142,7 @@ class FideFinanceAPI {
             const result = await response.json();
             
             if (result.success) {
-                alert('✅ Movimiento guardado exitosamente');
+                alert('Movimiento guardado exitosamente');
                 return result;
             } else {
                 alert('Error: ' + (result.error || 'Error al guardar'));
@@ -158,7 +157,7 @@ class FideFinanceAPI {
         }
     }
 
-    // === OBTENER MOVIMIENTOS (CORREGIDO) ===
+    // === OBTENER MOVIMIENTOS  ===
     async getMovements(limit = 100, offset = 0) {
         try {
             console.log('Obteniendo movimientos, token disponible:', !!this.token);
@@ -200,7 +199,7 @@ class FideFinanceAPI {
             const result = await response.json();
             
             if (result.success) {
-                alert('✅ Movimiento eliminado exitosamente');
+                alert('Movimiento eliminado exitosamente');
                 return result;
             } else {
                 alert('Error: ' + (result.error || 'Error al eliminar'));
@@ -208,7 +207,7 @@ class FideFinanceAPI {
             }
         } catch (error) {
             if (error.message === 'Sesión expirada') {
-                return; // Ya se maneja la redirección
+                return;
             }
             alert('Error: ' + error.message);
             throw error;
@@ -303,7 +302,7 @@ async getDashboard() {
     }
 }
 
-  // === OBTENER CATEGORÍAS (CORREGIDO) ===
+  // === OBTENER CATEGORÍAS  ===
 async getCategories() {
     try {
         console.log('Obteniendo categorías...');
@@ -441,7 +440,7 @@ async getCategoriesAlternative() {
     // === CERRAR SESIÓN ===
     logout() {
         this.clearSession();
-        alert('✅ Sesión cerrada exitosamente');
+        alert('Sesión cerrada exitosamente');
         window.location.href = 'user_logIn.html';
     }
 

@@ -1,4 +1,3 @@
-// statistics.js - Análisis estadístico avanzado
 let currentUser = null;
 let allMovements = [];
 let filteredMovements = [];
@@ -604,7 +603,7 @@ function exportStatistics() {
         link.click();
         document.body.removeChild(link);
         
-        alert('✅ Estadísticas exportadas exitosamente');
+        alert('Estadísticas exportadas exitosamente');
         
     } catch (error) {
         console.error('Error exportando estadísticas:', error);
